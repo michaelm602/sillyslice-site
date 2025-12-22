@@ -1,60 +1,28 @@
 import { NavLink } from "react-router-dom";
 
-const linkStyle = ({ isActive }) => ({
-    padding: "10px 12px",
-    borderRadius: 10,
-    textDecoration: "none",
-    color: "inherit",
-    background: isActive ? "rgba(0,0,0,0.08)" : "transparent",
-    fontWeight: isActive ? 700 : 500,
-});
-
 export default function Navbar() {
     return (
-        <header
-            style={{
-                position: "sticky",
-                top: 0,
-                backdropFilter: "blur(10px)",
-                background: "rgba(255,255,255,0.85)",
-                borderBottom: "1px solid rgba(0,0,0,0.08)",
-                zIndex: 50,
-            }}
-        >
-            <div
-                style={{
-                    maxWidth: 1100,
-                    margin: "0 auto",
-                    padding: "14px 24px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 16,
-                }}
-            >
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div
-                        style={{
-                            width: 34,
-                            height: 34,
-                            borderRadius: 12,
-                            background: "linear-gradient(135deg, rgba(0,0,0,0.9), rgba(0,0,0,0.2))",
-                        }}
-                    />
-                    <strong style={{ letterSpacing: 0.2 }}>Silly Slice</strong>
+        <header className="site-header">
+            <div className="site-header-inner">
+                <div className="brand">
+                    <div className="brand-mark" />
+                    <strong className="brand-name">Silly Slice</strong>
                 </div>
 
-                <nav style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <NavLink to="/" style={linkStyle}>
+                <nav className="nav">
+                    <NavLink to="/" end className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
                         Home
                     </NavLink>
-                    <NavLink to="/shop" style={linkStyle}>
+
+                    <NavLink to="/shop" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
                         Shop
                     </NavLink>
-                    <NavLink to="/about" style={linkStyle}>
+
+                    <NavLink to="/about" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
                         About
                     </NavLink>
-                    <NavLink to="/contact" style={linkStyle}>
+
+                    <NavLink to="/contact" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
                         Contact
                     </NavLink>
                 </nav>

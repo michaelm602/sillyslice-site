@@ -20,22 +20,18 @@ export default function Shop() {
     }, [cat]);
 
     return (
-        <div style={{ display: "grid", gap: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div className="shop-page">
+            <div className="shop-top">
                 <div>
-                    <h1 style={{ margin: 0 }}>Shop</h1>
-                    <p style={{ marginTop: 6, color: "rgba(0,0,0,0.7)" }}>
+                    <h1 className="shop-title">Shop</h1>
+                    <p className="shop-subtitle">
                         Placeholder products for now. Audrey will upload real ones from admin later.
                     </p>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <label style={{ fontWeight: 700 }}>Category</label>
-                    <select
-                        value={cat}
-                        onChange={(e) => setCat(e.target.value)}
-                        style={{ padding: "10px 12px", borderRadius: 12, border: "1px solid rgba(0,0,0,0.18)" }}
-                    >
+                <div className="shop-filter">
+                    <label className="shop-label">Category</label>
+                    <select value={cat} onChange={(e) => setCat(e.target.value)} className="shop-select">
                         <option value="all">All</option>
                         {categories.map((c) => (
                             <option key={c.id} value={c.id}>
@@ -46,61 +42,31 @@ export default function Shop() {
                 </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
+            <div className="product-grid">
                 {filtered.map((p) => {
                     const isSoldOut = p.fulfillment === "ready" && (!p.qty || p.qty <= 0);
 
                     return (
-                        <article
-                            key={p.id}
-                            style={{
-                                borderRadius: 18,
-                                border: "1px solid rgba(0,0,0,0.08)",
-                                padding: 16,
-                                display: "grid",
-                                gap: 10,
-                                background: "white",
-                            }}
-                        >
-                            <div
-                                style={{
-                                    height: 140,
-                                    borderRadius: 14,
-                                    border: "1px dashed rgba(0,0,0,0.25)",
-                                    display: "grid",
-                                    placeItems: "center",
-                                    color: "rgba(0,0,0,0.55)",
-                                    fontWeight: 700,
-                                }}
-                            >
-                                No image yet
-                            </div>
+                        <article key={p.id} className="product-card">
+                            <div className="product-image">No image yet</div>
 
-                            <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                            <div className="product-row">
                                 <strong>{p.name}</strong>
                                 <strong>{formatMoney(p.price)}</strong>
                             </div>
 
-                            <p style={{ margin: 0, color: "rgba(0,0,0,0.7)", fontSize: 14 }}>{p.description}</p>
+                            <p className="product-desc">{p.description}</p>
 
-                            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 13 }}>
-                                <span style={{ color: "rgba(0,0,0,0.7)" }}>{stockLabel(p)}</span>
-                                <span style={{ fontWeight: 700 }}>
+                            <div className="product-meta">
+                                <span className="product-stock">{stockLabel(p)}</span>
+                                <span className={`product-badge ${p.fulfillment === "ready" ? "ready" : "mto"}`}>
                                     {p.fulfillment === "ready" ? "Ready-to-ship" : "Made-to-order"}
                                 </span>
                             </div>
 
                             <button
                                 disabled={isSoldOut}
-                                style={{
-                                    padding: "10px 12px",
-                                    borderRadius: 12,
-                                    border: "1px solid rgba(0,0,0,0.18)",
-                                    background: isSoldOut ? "rgba(0,0,0,0.05)" : "black",
-                                    color: isSoldOut ? "rgba(0,0,0,0.4)" : "white",
-                                    fontWeight: 800,
-                                    cursor: isSoldOut ? "not-allowed" : "pointer",
-                                }}
+                                className={`btn ${isSoldOut ? "btn-disabled" : "btn-primary"} product-cta`}
                                 onClick={() => alert("Checkout later. For now this is a placeholder.")}
                             >
                                 {isSoldOut ? "Sold out" : "Add to cart (later)"}

@@ -18,32 +18,11 @@ export default function Home() {
                 </p>
 
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
-                    <Link
-                        to="/shop"
-                        style={{
-                            padding: "10px 14px",
-                            borderRadius: 12,
-                            background: "black",
-                            color: "white",
-                            textDecoration: "none",
-                            fontWeight: 700,
-                        }}
-                    >
+                    <Link to="/shop" className="btn btn-primary" style={{ textDecoration: "none" }}>
                         Shop toys
                     </Link>
 
-                    <Link
-                        to="/contact"
-                        style={{
-                            padding: "10px 14px",
-                            borderRadius: 12,
-                            border: "1px solid rgba(0,0,0,0.18)",
-                            color: "black",
-                            textDecoration: "none",
-                            fontWeight: 600,
-                            background: "white",
-                        }}
-                    >
+                    <Link to="/contact" className="btn" style={{ textDecoration: "none" }}>
                         Custom request
                     </Link>
                 </div>
