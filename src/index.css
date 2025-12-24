@@ -392,3 +392,21 @@ body {
   opacity: 0.85;
 }
 
+/* --- Footer --- */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 18px 24px;
+  color: var(--muted2);
+}
+
+.site-footer__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
