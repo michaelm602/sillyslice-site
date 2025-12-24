@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://michaelm602.github.io/sillyslice-site",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
