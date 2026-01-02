@@ -10,10 +10,10 @@ export const products = [
         name: "Gear Clicker",
         price: 9.99,
         category: "fidget",
-        fulfillment: "ready", // ready | made
+        fulfillment: "ready",
         qty: 12,
         description: "Clicky little gear toy. Loud enough to annoy your enemies.",
-        images: [],
+        image: "/products/placeholder1.png",
     },
     {
         id: "spiral-snake",
@@ -24,7 +24,7 @@ export const products = [
         leadDays: 3,
         qty: null,
         description: "Smooth, wiggly, oddly satisfying. Made-to-order.",
-        images: [],
+        image: "/products/placeholder2.webp",
     },
     {
         id: "mini-dragon",
@@ -34,6 +34,6 @@ export const products = [
         fulfillment: "ready",
         qty: 5,
         description: "Flexy dragon friend. No feeding required.",
-        images: [],
+        image: "/products/placeholder3.jpg",
     },
 ];

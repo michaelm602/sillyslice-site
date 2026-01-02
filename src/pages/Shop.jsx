@@ -48,7 +48,18 @@ export default function Shop() {
 
                     return (
                         <article key={p.id} className="product-card">
-                            <div className="product-image">No image yet</div>
+                            <div className="product-image">
+                                {p.image ? (
+                                    <img
+                                        src={p.image}
+                                        alt={p.name}
+                                        loading="lazy"
+                                    />
+                                ) : (
+                                    <span>No image yet</span>
+                                )}
+                            </div>
+
 
                             <div className="product-row">
                                 <strong>{p.name}</strong>
