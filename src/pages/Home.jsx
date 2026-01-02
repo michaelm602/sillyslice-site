@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 
 export default function Home() {
+    const base = import.meta.env.BASE_URL;
+
     return (
         <div style={{ display: "grid", gap: 18 }}>
             {/* Hero */}
@@ -9,18 +11,18 @@ export default function Home() {
                 style={{
                     padding: 28,
                     backgroundImage: `
-      linear-gradient(180deg,
-        color-mix(in srgb, var(--panel-2) 70%, transparent),
-        color-mix(in srgb, var(--bg) 35%, transparent)
-      ),
-      url("/hero/printer.jpg")
-    `,
+            linear-gradient(180deg,
+              color-mix(in srgb, var(--panel-2) 70%, transparent),
+              color-mix(in srgb, var(--bg) 35%, transparent)
+            ),
+            url("${base}hero/printer.jpg")
+          `,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                 }}
             >
                 <img
-                    src="/logo-hero.png"
+                    src={`${base}logo-hero.png`}
                     alt="Silly Slice"
                     style={{
                         width: "clamp(140px, 14vw, 190px)",
@@ -32,7 +34,6 @@ export default function Home() {
                 />
 
                 <h1 className="sr-only">Silly Slice</h1>
-
 
                 <p
                     style={{
