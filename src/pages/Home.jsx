@@ -5,16 +5,34 @@ export default function Home() {
         <div style={{ display: "grid", gap: 18 }}>
             {/* Hero */}
             <section
-                className="card"
+                className="card hero"
                 style={{
                     padding: 28,
-                    background:
-                        "linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 65%, transparent), transparent)",
+                    backgroundImage: `
+      linear-gradient(180deg,
+        color-mix(in srgb, var(--panel-2) 70%, transparent),
+        color-mix(in srgb, var(--bg) 35%, transparent)
+      ),
+      url("/hero/printer.jpg")
+    `,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
                 }}
             >
-                <h1 style={{ margin: 0, fontSize: 40, letterSpacing: -0.6 }}>
-                    Silly Slice
-                </h1>
+                <img
+                    src="/logo-hero.png"
+                    alt="Silly Slice"
+                    style={{
+                        width: "clamp(140px, 14vw, 190px)",
+                        height: "auto",
+                        display: "block",
+                        margin: 0,
+                        opacity: 0.95,
+                    }}
+                />
+
+                <h1 className="sr-only">Silly Slice</h1>
+
 
                 <p
                     style={{

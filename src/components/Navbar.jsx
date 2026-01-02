@@ -4,10 +4,17 @@ export default function Navbar() {
     return (
         <header className="site-header">
             <div className="site-header-inner">
-                <div className="brand">
-                    <div className="brand-mark" />
+                <NavLink to="/" className="brand">
+                    <picture>
+                        <source srcSet="/logo-mark-dark.png" media="(prefers-color-scheme: dark)" />
+                        <source srcSet="/logo-mark-light.png" media="(prefers-color-scheme: light)" />
+                        <img src="/logo-mark-dark.png" alt="Silly Slice logo" className="brand-mark" />
+                    </picture>
+
                     <strong className="brand-name">Silly Slice</strong>
-                </div>
+                </NavLink>
+
+
 
                 <nav className="nav">
                     <NavLink to="/" end className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>

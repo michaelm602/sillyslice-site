@@ -11,6 +11,29 @@ function stockLabel(p) {
     return "Sold out";
 }
 
+function ProductImage({ src, alt }) {
+    const [loaded, setLoaded] = useState(false);
+
+    return (
+        <div className={`product-image-wrap ${loaded ? "is-loaded" : ""}`}>
+            {src ? (
+                <img
+                    className="product-img"
+                    src={src}
+                    alt={alt}
+                    loading="lazy"
+                    decoding="async"
+                    onLoad={() => setLoaded(true)}
+                    onError={() => setLoaded(true)}
+                />
+            ) : (
+                <span className="product-img-fallback">No image yet</span>
+            )}
+            <div className="img-sheen" aria-hidden="true" />
+        </div>
+    );
+}
+
 export default function Shop() {
     const [cat, setCat] = useState("all");
 
@@ -48,17 +71,8 @@ export default function Shop() {
 
                     return (
                         <article key={p.id} className="product-card">
-                            <div className="product-image">
-                                {p.image ? (
-                                    <img
-                                        src={p.image}
-                                        alt={p.name}
-                                        loading="lazy"
-                                    />
-                                ) : (
-                                    <span>No image yet</span>
-                                )}
-                            </div>
+                            <ProductImage src={p.image} alt={p.name} />
+
 
 
                             <div className="product-row">
