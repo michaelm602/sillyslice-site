@@ -500,23 +500,7 @@ body {
       rgba(5, 10, 20, 0.88)
     ),
 
-    /* slow background drift (subtle parallax vibe) */
-.hero {
-  animation: heroDrift 18s ease-in-out infinite;
-  /* keeps it smooth */
-  will-change: background-position;
-}
-
-@keyframes heroDrift {
-  0%   { background-position: 50% 45%; }
-  50%  { background-position: 50% 55%; }
-  100% { background-position: 50% 45%; }
-}
-
-/* respect users who prefer less motion */
-@media (prefers-reduced-motion: reduce) {
-  .hero { animation: none; }
-}
+    
 
     /* ACCENT GLOWS */
     radial-gradient(
@@ -535,6 +519,24 @@ body {
 
 .hero > * {
   position: relative; /* keeps content above overlays */
+}
+
+/* slow background drift (subtle parallax vibe) */
+.hero {
+  animation: heroDrift 18s ease-in-out infinite;
+  /* keeps it smooth */
+  will-change: background-position;
+}
+
+@keyframes heroDrift {
+  0%   { background-position: 50% 45%; }
+  50%  { background-position: 50% 55%; }
+  100% { background-position: 50% 45%; }
+}
+
+/* respect users who prefer less motion */
+@media (prefers-reduced-motion: reduce) {
+  .hero { animation: none; }
 }
 
 
