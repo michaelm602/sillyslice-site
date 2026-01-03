@@ -40,7 +40,6 @@ export default function Home() {
                         marginTop: 10,
                         maxWidth: 700,
                         fontSize: 16,
-                        color: "var(--muted)",
                     }}
                 >
                     3D printed fidget + sensory toys. Some are ready-to-ship, some are

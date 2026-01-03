@@ -473,10 +473,18 @@ body {
 }
 
 .hero {
+  color: #fff;
   position: relative;
   overflow: hidden;
   border-radius: 20px; /* match your card radius */
   background-clip: padding-box;
+}
+
+.hero p,
+.hero a,
+.hero .btn,
+.hero .btn-primary {
+  color: #fff;
 }
 
 .hero::before {
@@ -491,6 +499,24 @@ body {
       rgba(5, 10, 20, 0.78),
       rgba(5, 10, 20, 0.88)
     ),
+
+    /* slow background drift (subtle parallax vibe) */
+.hero {
+  animation: heroDrift 18s ease-in-out infinite;
+  /* keeps it smooth */
+  will-change: background-position;
+}
+
+@keyframes heroDrift {
+  0%   { background-position: 50% 45%; }
+  50%  { background-position: 50% 55%; }
+  100% { background-position: 50% 45%; }
+}
+
+/* respect users who prefer less motion */
+@media (prefers-reduced-motion: reduce) {
+  .hero { animation: none; }
+}
 
     /* ACCENT GLOWS */
     radial-gradient(
