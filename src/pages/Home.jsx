@@ -89,7 +89,7 @@ export default function Home() {
                         {
                             id: "feat-gear-clicker",
                             name: "Gear Clicker",
-                            image: "/products/placeholder1.png",
+                            image: `${base}products/placeholder1.png`,
                             description: "Clicky little fidget. Loud enough to be satisfying.",
                             price: 9.99,
                             fulfillment: "ready",
@@ -98,7 +98,7 @@ export default function Home() {
                         {
                             id: "feat-flex-dino",
                             name: "Flex Dino",
-                            image: "/products/placeholder2.webp",
+                            image: `${base}products/placeholder2.webp`,
                             description: "Bendy, durable, and weirdly addictive.",
                             price: 14.99,
                             fulfillment: "made",
@@ -108,7 +108,7 @@ export default function Home() {
                         {
                             id: "feat-infinity-cube",
                             name: "Infinity Cube",
-                            image: "/products/placeholder3.jpg",
+                            image: `${base}products/placeholder3.jpg`,
                             description: "Smooth folds. Pocket-friendly stress killer.",
                             price: 12.99,
                             fulfillment: "ready",
@@ -117,7 +117,7 @@ export default function Home() {
                         {
                             id: "feat-puzzle-keychain",
                             name: "Puzzle Keychain",
-                            image: "/products/placeholder4.jpg",
+                            image: `${base}products/placeholder4.jpg`,
                             description: "Tiny brain teaser you can carry anywhere.",
                             price: 6.99,
                             fulfillment: "ready",
@@ -129,12 +129,12 @@ export default function Home() {
                             product={p}
                             href="#/shop"
                             linkText="View in shop →"
-                            fallbackImg="/products/placeholder1.png"
+                            fallbackImg={`${base}products/placeholder1.png`}
                         />
                     ))}
                 </div>
-
             </section>
+
 
 
 
