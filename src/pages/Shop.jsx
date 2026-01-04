@@ -1,38 +1,7 @@
 import { useMemo, useState } from "react";
-import { categories, products } from "../data/products";
+import { products, categories } from "../data/products";
+import ToyCard from "../components/ToyCard";
 
-function formatMoney(n) {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
-}
-
-function stockLabel(p) {
-    if (p.fulfillment === "made") return `Made to order • ~${p.leadDays ?? 3} days`;
-    if (typeof p.qty === "number" && p.qty > 0) return `In stock: ${p.qty}`;
-    return "Sold out";
-}
-
-function ProductImage({ src, alt }) {
-    const [loaded, setLoaded] = useState(false);
-
-    return (
-        <div className={`product-image-wrap ${loaded ? "is-loaded" : ""}`}>
-            {src ? (
-                <img
-                    className="product-img"
-                    src={src}
-                    alt={alt}
-                    loading="lazy"
-                    decoding="async"
-                    onLoad={() => setLoaded(true)}
-                    onError={() => setLoaded(true)}
-                />
-            ) : (
-                <span className="product-img-fallback">No image yet</span>
-            )}
-            <div className="img-sheen" aria-hidden="true" />
-        </div>
-    );
-}
 
 export default function Shop() {
     const [cat, setCat] = useState("all");
@@ -42,21 +11,32 @@ export default function Shop() {
         return products.filter((p) => p.category === cat);
     }, [cat]);
 
+    const categoryOptions = useMemo(() => {
+        return [{ id: "all", name: "All" }, ...categories];
+    }, []);
+
     return (
         <div className="shop-page">
             <div className="shop-top">
                 <div>
                     <h1 className="shop-title">Shop</h1>
                     <p className="shop-subtitle">
-                        Placeholder products for now. Audrey will upload real ones from admin later.
+                        Placeholder products for now — Audrey will upload the real ones later.
                     </p>
                 </div>
 
                 <div className="shop-filter">
-                    <label className="shop-label">Category</label>
-                    <select value={cat} onChange={(e) => setCat(e.target.value)} className="shop-select">
-                        <option value="all">All</option>
-                        {categories.map((c) => (
+                    <label className="shop-label" htmlFor="cat">
+                        Category
+                    </label>
+
+                    <select
+                        id="cat"
+                        className="shop-select"
+                        value={cat}
+                        onChange={(e) => setCat(e.target.value)}
+                    >
+                        {categoryOptions.map((c) => (
                             <option key={c.id} value={c.id}>
                                 {c.name}
                             </option>
@@ -65,41 +45,20 @@ export default function Shop() {
                 </div>
             </div>
 
-            <div className="product-grid">
-                {filtered.map((p) => {
-                    const isSoldOut = p.fulfillment === "ready" && (!p.qty || p.qty <= 0);
+            <section className="card-soft" style={{ padding: 18 }}>
+                <div className="toy-grid">
+                    {filtered.map((p) => (
+                        <ToyCard
+                            key={p.id}
+                            product={p}
+                            href="#/shop"
+                            linkText="View →"
+                            fallbackImg={products[0]?.image || "/products/placeholder1.png"}
+                        />
+                    ))}
+                </div>
 
-                    return (
-                        <article key={p.id} className="product-card">
-                            <ProductImage src={p.image} alt={p.name} />
-
-
-
-                            <div className="product-row">
-                                <strong>{p.name}</strong>
-                                <strong>{formatMoney(p.price)}</strong>
-                            </div>
-
-                            <p className="product-desc">{p.description}</p>
-
-                            <div className="product-meta">
-                                <span className="product-stock">{stockLabel(p)}</span>
-                                <span className={`product-badge ${p.fulfillment === "ready" ? "ready" : "mto"}`}>
-                                    {p.fulfillment === "ready" ? "Ready-to-ship" : "Made-to-order"}
-                                </span>
-                            </div>
-
-                            <button
-                                disabled={isSoldOut}
-                                className={`btn ${isSoldOut ? "btn-disabled" : "btn-primary"} product-cta`}
-                                onClick={() => alert("Checkout later. For now this is a placeholder.")}
-                            >
-                                {isSoldOut ? "Sold out" : "Add to cart (later)"}
-                            </button>
-                        </article>
-                    );
-                })}
-            </div>
+            </section>
         </div>
     );
 }

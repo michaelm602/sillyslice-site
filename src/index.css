@@ -527,6 +527,262 @@ body {
   will-change: background-position;
 }
 
+/* =========================
+   Featured section (Home)
+   Use SAME cards as Shop (toy-card)
+   ========================= */
+
+.featured {
+  padding: 18px;
+}
+
+.featured-title {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.featured-subtitle {
+  margin: 6px 0 14px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Featured grid uses the SAME layout rules as toy-grid */
+.featured-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* Make featured cards behave EXACTLY like toy cards */
+.featured-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+  height: 100%;
+  width: 100%;
+  max-width: none;
+  align-self: stretch;
+  justify-self: stretch;
+}
+
+.featured-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--accent2) 30%, var(--border));
+  box-shadow: 0 22px 55px rgba(0,0,0,0.18);
+}
+
+.featured-imgWrap {
+  position: relative;
+  height: 150px; /* match toy-imgWrap */
+  background:
+    radial-gradient(120px 90px at 20% 20%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%),
+    radial-gradient(120px 90px at 80% 30%, color-mix(in srgb, var(--accent2) 10%, transparent), transparent 60%),
+    color-mix(in srgb, var(--panel) 80%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.featured-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 12px;
+  display: block;
+  background: rgba(255,255,255,0.04);
+}
+
+.featured-body {
+  padding: 12px 14px 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.featured-name {
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.featured-blurb {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.featured-link {
+  display: inline-block;
+  margin-top: 2px;
+  font-weight: 900;
+  text-decoration: none;
+  color: color-mix(in srgb, var(--accent2) 70%, var(--text));
+}
+
+.featured-link:hover {
+  text-decoration: underline;
+  transform: translateX(2px);
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+  .featured-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .featured-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   Shared Toy Cards (Home + Shop)
+   ========================= */
+
+.toy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* =========================
+   Mobile: make the grid not try to be a 3-column clown car
+   ========================= */
+
+@media (max-width: 980px) {
+  .toy-grid,
+  .featured-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .toy-grid,
+  .featured-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* OPTIONAL: if you're still using product-grid anywhere,
+   fix the mobile rule (your current repeat(3,1fr) is wild) */
+@media (max-width: 640px) {
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.toy-card,
+.featured-card {
+  width: 100%;
+  height: 100%;
+  max-width: none;          /* important: no caps */
+  align-self: stretch;      /* fill the grid row */
+  justify-self: stretch;    /* fill the grid column */
+}
+
+.toy-grid,
+.featured-grid {
+  align-items: stretch;
+}
+
+.toy-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+
+.toy-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--accent2) 30%, var(--border));
+  box-shadow: 0 22px 55px rgba(0,0,0,0.18);
+}
+
+.toy-imgWrap {
+  position: relative;
+  height: 150px;
+  background:
+    radial-gradient(120px 90px at 20% 20%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%),
+    radial-gradient(120px 90px at 80% 30%, color-mix(in srgb, var(--accent2) 10%, transparent), transparent 60%),
+    color-mix(in srgb, var(--panel) 80%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.toy-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 12px;
+  display: block;
+}
+
+.toy-body {
+  padding: 12px 14px 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.toy-name {
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.toy-blurb {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.toy-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+  color: var(--muted2);
+  font-size: 13px;
+}
+
+.toy-badge {
+  font-weight: 900;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+}
+
+.toy-badge.ready {
+  border-color: color-mix(in srgb, var(--accent3) 45%, var(--border));
+}
+
+.toy-badge.mto {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+.toy-link {
+  display: inline-block;
+  margin-top: 2px;
+  font-weight: 900;
+  text-decoration: none;
+  color: color-mix(in srgb, var(--accent2) 70%, var(--text));
+}
+
+.toy-link:hover {
+  text-decoration: underline;
+  transform: translateX(2px);
+}
+
+
 @keyframes heroDrift {
   0%   { background-position: 50% 45%; }
   50%  { background-position: 50% 55%; }
@@ -949,6 +1205,29 @@ html, body {
     gap: 8px;
   }
 }
+
+/* --- Home: What's next section --- */
+.home-next {
+  padding: 22px;
+}
+
+.home-next__title {
+  margin-top: 0;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.home-next__list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.home-next__list li {
+  margin-bottom: 6px;
+}
+
 
 
 

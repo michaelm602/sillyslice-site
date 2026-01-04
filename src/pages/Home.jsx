@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import ToyCard from "../components/ToyCard";
+
 
 export default function Home() {
     const base = import.meta.env.BASE_URL;
@@ -65,22 +67,77 @@ export default function Home() {
             </section>
 
             {/* Next steps */}
-            <section className="card-soft" style={{ padding: 22 }}>
-                <h2 style={{ marginTop: 0 }}>What we’re building next</h2>
+            <section className="card-soft home-next">
+                <h2 className="home-next__title">What we’re building next</h2>
 
-                <ul
-                    style={{
-                        margin: 0,
-                        paddingLeft: 18,
-                        color: "var(--muted)",
-                    }}
-                >
+                <ul className="home-next__list">
                     <li>Real product photos (uploaded by Audrey in admin)</li>
                     <li>Inventory tracking (ready-to-ship counts)</li>
                     <li>Made-to-order lead times</li>
                     <li>PayPal checkout</li>
                 </ul>
             </section>
+
+            <section className="card-soft featured">
+                <h2 className="featured-title">Featured toys</h2>
+                <p className="featured-subtitle">
+                    (Placeholder for now — Audrey will upload the real product photos later.)
+                </p>
+
+                <div className="toy-grid">
+                    {[
+                        {
+                            id: "feat-gear-clicker",
+                            name: "Gear Clicker",
+                            image: "/products/placeholder1.png",
+                            description: "Clicky little fidget. Loud enough to be satisfying.",
+                            price: 9.99,
+                            fulfillment: "ready",
+                            qty: 12,
+                        },
+                        {
+                            id: "feat-flex-dino",
+                            name: "Flex Dino",
+                            image: "/products/placeholder2.webp",
+                            description: "Bendy, durable, and weirdly addictive.",
+                            price: 14.99,
+                            fulfillment: "made",
+                            leadDays: 3,
+                            qty: null,
+                        },
+                        {
+                            id: "feat-infinity-cube",
+                            name: "Infinity Cube",
+                            image: "/products/placeholder3.jpg",
+                            description: "Smooth folds. Pocket-friendly stress killer.",
+                            price: 12.99,
+                            fulfillment: "ready",
+                            qty: 5,
+                        },
+                        {
+                            id: "feat-puzzle-keychain",
+                            name: "Puzzle Keychain",
+                            image: "/products/placeholder4.jpg",
+                            description: "Tiny brain teaser you can carry anywhere.",
+                            price: 6.99,
+                            fulfillment: "ready",
+                            qty: 9,
+                        },
+                    ].map((p) => (
+                        <ToyCard
+                            key={p.id}
+                            product={p}
+                            href="#/shop"
+                            linkText="View in shop →"
+                            fallbackImg="/products/placeholder1.png"
+                        />
+                    ))}
+                </div>
+
+            </section>
+
+
+
         </div>
     );
 }
