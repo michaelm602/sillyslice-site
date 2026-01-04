@@ -1,3 +1,5 @@
+// src/data/products.js
+
 export const categories = [
     { id: "fidget", name: "Fidgets" },
     { id: "sensory", name: "Sensory" },
@@ -16,6 +18,7 @@ export const products = [
         qty: 12,
         description: "Clicky little gear toy. Loud enough to annoy your enemies.",
         image: `${base}products/placeholder1.png`,
+        featuredRank: 1,
     },
     {
         id: "spiral-snake",
@@ -27,6 +30,7 @@ export const products = [
         qty: null,
         description: "Smooth, wiggly, oddly satisfying. Made-to-order.",
         image: `${base}products/placeholder2.webp`,
+        featuredRank: 2,
     },
     {
         id: "mini-dragon",
@@ -37,6 +41,17 @@ export const products = [
         qty: 5,
         description: "Flexy dragon friend. No feeding required.",
         image: `${base}products/placeholder3.jpg`,
+        featuredRank: 3,
+    },
+    {
+        id: "puzzle-keychain",
+        name: "Puzzle Keychain",
+        price: 6.99,
+        category: "fidget",
+        fulfillment: "ready",
+        qty: 9,
+        description: "Tiny brain teaser you can carry anywhere.",
+        image: `${base}products/placeholder4.jpg`,
+        featuredRank: 4,
     },
 ];
-
