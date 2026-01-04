@@ -4,7 +4,6 @@
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-
 /* 2) Theme tokens (default = dark because your screenshots are dark) */
 :root {
   --bg: #070b14;
@@ -575,5 +574,382 @@ body {
     transform: translateY(0);
   }
 }
+
+
+
+/* =========================
+   Mobile polish (Silly Slice)
+   ========================= */
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* logo: don't crop the mark */
+.brand-mark {
+  object-fit: contain;
+}
+
+/* MOBILE */
+@media (max-width: 640px) {
+  /* main wrapper in App.jsx uses inline padding; override it */
+  main {
+    padding: 16px !important;
+  }
+
+  .site-header-inner {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .brand-name {
+    font-size: 16px;
+  }
+
+  /* Nav pills: prevent ugly wrapping */
+  .nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px;
+    padding-bottom: 4px;
+  }
+
+  .nav::-webkit-scrollbar { display: none; }
+
+  .nav-link {
+    padding: 8px 10px;
+    font-size: 14px;
+    border-radius: 10px;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  /* hero: keep it tight + readable */
+  .hero {
+    border-radius: 16px;
+  }
+
+  /* Shop filter stacks clean */
+  .shop-top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .shop-filter {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .shop-select {
+    width: 100%;
+  }
+
+  /* Shop grid: single column on phones */
+  .product-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .product-card {
+    border-radius: 16px;
+    padding: 14px;
+  }
+
+  /* images read better a bit taller on mobile */
+  .product-image-wrap {
+    height: 160px;
+  }
+
+  /* buttons become thumb-friendly */
+  .btn, .btn-primary {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* =========================
+   Mobile Drawer Nav
+   ========================= */
+
+.nav-toggle {
+  display: none;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.burger {
+  width: 22px;
+  height: 16px;
+  display: inline-grid;
+  gap: 4px;
+}
+
+.burger span {
+  display: block;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--text);
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.burger.is-open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.burger.is-open span:nth-child(2) { opacity: 0; }
+.burger.is-open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* Overlay only covers the area LEFT of the drawer */
+/* Full-screen overlay (no seams, no flicker) */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+
+  z-index: 60;
+}
+
+.drawer-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Drawer panel (more solid + no flicker) */
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100dvh;
+  width: min(360px, 86vw);
+
+  /* Less see-through */
+  background: color-mix(in srgb, var(--bg) 94%, rgba(0,0,0,0));
+
+  border-left: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+
+  /* Keep blur, but DON'T animate it */
+  backdrop-filter: blur(14px);
+
+  /* GPU-friendly slide */
+  transform: translate3d(110%, 0, 0);
+  transition: transform 240ms ease;
+  will-change: transform;
+
+  /* Big shadow = separation from page */
+  box-shadow: -18px 0 55px rgba(0,0,0,0.45);
+
+  z-index: 70;
+
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 12px;
+  padding: 14px;
+
+  /* prevents weird flicker on some browsers */
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.drawer.is-open {
+  transform: translate3d(0, 0, 0);
+}
+
+/* Optional: subtle inner glow so it feels “premium” not foggy */
+.drawer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.06),
+    rgba(255,255,255,0.02)
+  );
+  opacity: 0.85;
+}
+
+.drawer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drawer-title {
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+
+.drawer-close {
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+/* ---- Drawer: stop the link cards from stretching ---- */
+.drawer-link {
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+}
+
+/* --- Fix giant CTA in drawer --- */
+.drawer-cta {
+  display: grid;
+  gap: 8px;
+  align-content: start;        /* don't stretch vertically */
+  grid-auto-rows: max-content; /* rows fit content */
+}
+
+.drawer-cta a {
+  display: inline-flex;        /* stops "block fills the row" vibe */
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-decoration: none;
+
+  /* hard reset any giant sizing coming from elsewhere */
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 10px 12px !important;
+  line-height: 1.2 !important;
+
+  /* prevent it from trying to fill space */
+  flex: 0 0 auto !important;
+}
+
+/* If your global .btn styles are fighting this, clamp them inside drawer */
+.drawer .drawer-cta .btn,
+.drawer .drawer-cta .btn-primary {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 10px 12px !important;
+  font-size: 14px !important;
+  border-radius: 12px !important;
+  box-shadow: none; /* optional */
+}
+
+/* While dragging: no transition (prevents jitter) */
+.drawer.is-dragging {
+  transition: none !important;
+  cursor: grabbing;
+}
+
+/* Helps mobile browsers keep drag smooth */
+.drawer {
+  touch-action: pan-y; /* allow vertical scroll, we’ll handle horizontal */
+}
+
+
+/* Smaller drawer nav items */
+@media (max-width: 640px) {
+  .drawer {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .drawer-links {
+    gap: 8px;
+  }
+
+  .drawer-link {
+    padding: 10px 12px;  /* was 12px 12px */
+    border-radius: 12px; /* was 14px */
+    font-size: 14px;     /* was ~16 */
+    line-height: 1.2;
+    font-weight: 800;
+  }
+
+  .drawer .drawer-cta .btn,
+.drawer .drawer-cta .btn-primary {
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+}
+}
+
+/* Optional: remove inline style needs */
+.drawer-cta a {
+  text-decoration: none;
+}
+
+
+.drawer-links {
+  display: grid;
+  gap: 10px;
+}
+
+.drawer-link {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 900;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--panel) 55%, transparent);
+}
+
+.drawer-link:hover {
+  border-color: color-mix(in srgb, var(--accent2) 35%, var(--border));
+}
+
+.drawer-cta {
+  display: grid;
+  gap: 10px;
+}
+
+/* Mobile behavior: show hamburger + hide desktop nav */
+@media (max-width: 640px) {
+  .nav--desktop {
+    display: none;
+  }
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Reduce motion respect */
+@media (prefers-reduced-motion: reduce) {
+  .drawer,
+  .drawer-overlay,
+  .burger span {
+    transition: none;
+  }
+}
+
+
+
+/* Smaller CTA buttons inside the mobile drawer */
+@media (max-width: 640px) {
+  .drawer .drawer-cta .btn,
+  .drawer .drawer-cta .btn-primary {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 12px;
+    font-weight: 800;
+  }
+
+  /* optional: make the drawer links less chunky too */
+  .drawer .drawer-link {
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 16px;
+  }
+
+  /* optional: tighten spacing */
+  .drawer .drawer-cta {
+    gap: 8px;
+  }
+}
+
+
 
 

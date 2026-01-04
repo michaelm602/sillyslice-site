@@ -1,111 +1,216 @@
 Silly Slice — Project State (Updated)
-Quick links
+🔗 Quick links
 
 Repo: https://github.com/michaelm602/sillyslice-site
 
 Live (GitHub Pages): https://michaelm602.github.io/sillyslice-site/#/
 
-Current goal
+🎯 Current goal
 
-Build a cute + playful multi-page storefront site (React + Vite) with:
+Build a cute + playful multi-page storefront (React + Vite) with a polished mobile experience:
 
-Home, Shop, About, Contact
+Pages: Home, Shop, About, Contact
 
-Placeholder products + images now
+Placeholder products + images for now
 
-Later: admin uploads, inventory tracking, made-to-order lead times, PayPal checkout
-Hosting later on DigitalOcean + custom domain (GoDaddy). For now: GitHub Pages.
+Future:
 
-Tech stack
+Admin uploads
+
+Inventory tracking
+
+Made-to-order lead times
+
+PayPal checkout
+
+Hosting later on DigitalOcean + custom domain (GoDaddy)
+For now: GitHub Pages
+
+🧱 Tech stack
 
 Vite + React
 
-React Router HashRouter (required for GitHub Pages refresh support)
+React Router (HashRouter)
+Required for GitHub Pages refresh support
 
-CSS variables theme + auto light/dark via prefers-color-scheme
+CSS variables theme
 
-Styling currently centralized in src/index.css
+Auto light/dark via prefers-color-scheme
+
+Styling centralized in src/index.css
 
 gh-pages deployment: build → deploy dist
 
-What works right now
+✅ What works right now
+Core
 
-GitHub Pages deploy is working
+GitHub Pages deploy is stable
 
-Routing is stable on GitHub Pages using hash routes:
+Routing works correctly with hash routes:
 
 /sillyslice-site/#/
 
 /sillyslice-site/#/shop
 
-Shop page uses product mock data and renders cards
+/sillyslice-site/#/about
 
-Placeholder images now show correctly in production
+/sillyslice-site/#/contact
 
-Navbar active tab styling works with the “cute/playful” gradient theme
+Placeholder images render correctly in local + production
 
-Product cards use class-based styling (consistent theme)
+Navbar active tab styling matches playful gradient theme
 
-Images setup (current)
+Shop page renders product mock data into styled cards
 
-Placeholder images stored in: public/products/*
+Mobile navigation (recently completed)
 
-Product data references images using absolute paths like:
+Mobile drawer navigation implemented
+
+Hamburger menu shows only on mobile
+
+Desktop nav hidden correctly on small screens
+
+Drawer features:
+
+✅ Tap outside (overlay) closes drawer
+
+✅ Swipe right to close (touch + mouse)
+
+✅ ESC key closes drawer
+
+✅ Auto-closes when resizing to desktop
+
+✅ Background scroll locked while open
+
+Drawer flicker eliminated during open/close
+
+Drawer background opacity increased (less see-through, more readable)
+
+CTA buttons inside drawer no longer stretch or grow unexpectedly
+
+Drawer CTA (“Custom request”) now sizes correctly and matches theme
+
+🖼 Images setup (current)
+
+Placeholder images stored in:
+public/products/*
+
+Product data references images using absolute paths:
 
 image: "/products/placeholder1.png"
 
-Images render on both local + GitHub Pages now.
 
-Key files
+Images render correctly on both localhost and GitHub Pages
 
+📁 Key files
 src/index.css
 
-Theme tokens: --accent, --accent2, --accent3
+Theme tokens:
 
-Background gradients
+--accent, --accent2, --accent3
 
-Buttons: .btn, .btn-primary, .btn-disabled
+Global background gradients
 
-Shop layout + card styles: .shop-page, .product-grid, .product-card, .product-image, badges, etc.
+Buttons:
+
+.btn, .btn-primary, .btn-disabled
+
+Shop layout + cards:
+
+.shop-page, .product-grid, .product-card
+
+.product-image-wrap, badges, CTA styles
+
+Navbar + mobile drawer styling:
+
+.nav, .nav-toggle, .drawer, .drawer-overlay
+
+Mobile spacing + sizing fixes
+
+Drawer CTA hard-clamped to prevent stretching
+
+src/components/Navbar.jsx
+
+Desktop + mobile navigation logic
+
+Mobile drawer state handling
+
+Swipe-to-close logic using pointer events
+
+Overlay click-to-close
+
+ESC key handling
+
+Auto-close on breakpoint change
+
+Scroll locking when drawer is open
 
 src/pages/Shop.jsx
 
-Uses products + categories from data file
+Uses mock product data
 
 Maps products into styled cards
 
+Category filter placeholder in place
+
 src/data/products.js
 
-Product objects now include image string (single image per product for now)
+Product objects include:
+
+name
+
+description
+
+stock
+
+image (single image per product for now)
 
 src/App.jsx / src/main.jsx
 
 Uses HashRouter so refresh works on GitHub Pages
 
-Known issues / notes
+⚠️ Known issues / notes
 
-Some placeholder images look “zoomed/cropped” depending on aspect ratio.
+Some placeholder images appear slightly zoomed depending on aspect ratio
+(expected with random portrait/landscape sources)
 
-Current intent: make image area resilient to random portrait/landscape uploads (Audrey will absolutely do this 😭)
+Console warnings observed:
 
-Local dev refresh may warn about base URL if vite.config.js base is set; use the recommended path or keep dev links consistent.
+ARIA focus warning (resolved by using hidden instead of aria-hidden)
 
-Next up (priority order)
+Browser extension runtime warnings (safe to ignore)
 
-Image polish (no layout changes):
+No real checkout yet (buttons are visual placeholders only)
 
-Add image load fade-in (nice premium feel)
+⏭️ Next up (priority order)
+
+Image polish (no layout changes)
+
+Add image load fade-in
 
 Auto-handle portrait vs landscape consistently
 
-Ensure images never look “cropped weird” even if uploaded sizes vary
+Ensure images never look cropped or awkward
+(future-proof for Audrey uploads 😭)
 
-Prep for Firebase image URLs later:
+Prep for Firebase image URLs
 
-Keep product card layout stable
+Keep card layout stable
 
-Only swap image values from /public/products/* → Firebase Storage URLs when ready
+Swap image paths from /public/products/* → Firebase Storage URLs later
 
-Mobile polish pass (spacing + grid + navbar wrapping)
+Mobile polish pass
 
-Start scaffolding admin upload flow (later)
+Final spacing tweaks
+
+Verify drawer behavior across devices
+
+Thumb-reach comfort check
+
+Admin groundwork (later)
+
+Scaffold upload flow
+
+Plan inventory + lead time fields
+
+Wire PayPal checkout
