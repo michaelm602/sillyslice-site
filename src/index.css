@@ -725,6 +725,32 @@ body {
   display: block;
 }
 
+/* --- ToyCard: fade-in on load (SafeImage adds .is-loaded to img) --- */
+.toy-img {
+  opacity: 0;
+  transform: scale(0.98);
+  transition: opacity 280ms ease, transform 320ms ease;
+}
+
+.toy-img.is-loaded {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* --- ToyCard: stop shimmer after load --- */
+.toy-imgWrap:has(img.is-loaded) .img-sheen {
+  opacity: 0;
+  animation: none;
+  transition: opacity 200ms ease;
+  border-radius: inherit;
+}
+
+/* Optional: keep a tiny hover zoom without fighting the card hover */
+.toy-card:hover .toy-img.is-loaded {
+  transform: scale(1.03);
+}
+
+
 .toy-body {
   padding: 12px 14px 14px;
   display: grid;
@@ -1203,6 +1229,12 @@ html, body {
   /* optional: tighten spacing */
   .drawer .drawer-cta {
     gap: 8px;
+  }
+}
+
+@media (max-width: 800px) {
+  .product-detail-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 

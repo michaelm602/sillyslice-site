@@ -51,9 +51,9 @@ export default function Shop() {
                         <ToyCard
                             key={p.id}
                             product={p}
-                            href="#/shop"
+                            href={`#/shop/${p.id}`}
                             linkText="View →"
-                            fallbackImg={products[0]?.image || "/products/placeholder1.png"}
+                            fallbackImg={`${import.meta.env.BASE_URL}products/placeholder1.png`}
                         />
                     ))}
                 </div>

@@ -2,11 +2,14 @@
 import { Link } from "react-router-dom";
 import ToyCard from "../components/ToyCard";
 import { useFeaturedProducts } from "../hooks/useFeaturedProducts";
+import { siteContent } from "../data/siteContent";
 
 export default function Home() {
     const base = import.meta.env.BASE_URL;
     const featured = useFeaturedProducts();
 
+    const hero = siteContent.hero;
+    const home = siteContent.home;
 
     return (
         <div style={{ display: "grid", gap: 18 }}>
@@ -20,7 +23,7 @@ export default function Home() {
               color-mix(in srgb, var(--panel-2) 70%, transparent),
               color-mix(in srgb, var(--bg) 35%, transparent)
             ),
-            url("${base}hero/printer.jpg")
+            url("${hero.image}")
           `,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
@@ -28,7 +31,7 @@ export default function Home() {
             >
                 <img
                     src={`${base}logo-hero.png`}
-                    alt="Silly Slice"
+                    alt={siteContent.brandName}
                     style={{
                         width: "clamp(140px, 14vw, 190px)",
                         height: "auto",
@@ -38,49 +41,46 @@ export default function Home() {
                     }}
                 />
 
-                <h1 className="sr-only">Silly Slice</h1>
+                <h1 className="sr-only">{siteContent.brandName}</h1>
 
                 <p style={{ marginTop: 10, maxWidth: 700, fontSize: 16 }}>
-                    3D printed fidget + sensory toys. Some are ready-to-ship, some are
-                    made-to-order. Either way, we keep it satisfying.
+                    {hero.subhead}
                 </p>
 
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
                     <Link to="/shop" className="btn btn-primary" style={{ textDecoration: "none" }}>
-                        Shop toys
+                        {hero.ctaText}
                     </Link>
 
                     <Link to="/contact" className="btn" style={{ textDecoration: "none" }}>
-                        Custom request
+                        {hero.secondaryText}
                     </Link>
                 </div>
             </section>
 
             {/* Next steps */}
             <section className="card-soft home-next">
-                <h2 className="home-next__title">What we’re building next</h2>
+                <h2 className="home-next__title">{home.nextTitle}</h2>
 
                 <ul className="home-next__list">
-                    <li>Real product photos (uploaded by Audrey in admin)</li>
-                    <li>Inventory tracking (ready-to-ship counts)</li>
-                    <li>Made-to-order lead times</li>
-                    <li>PayPal checkout</li>
+                    {home.nextItems.map((item) => (
+                        <li key={item}>{item}</li>
+                    ))}
                 </ul>
             </section>
 
             {/* Featured */}
             <section className="card-soft featured">
-                <h2 className="featured-title">Featured toys</h2>
-                <p className="featured-subtitle">
-                    (Placeholder for now — Audrey will upload the real product photos later.)
-                </p>
+                <h2 className="featured-title">{home.featuredTitle}</h2>
+                <p className="featured-subtitle">{home.featuredSubtitle}</p>
 
                 <div className="toy-grid">
                     {featured.map((p) => (
                         <ToyCard
                             key={p.id}
                             product={p}
-                            href="#/shop"
+                            href={`#/shop/${p.id}`}
+
                             linkText="View in shop →"
                             fallbackImg={`${base}products/placeholder1.png`}
                         />

@@ -1,10 +1,11 @@
 import { useMemo } from "react";
+import SafeImage from "./SafeImage";
 
 export default function ToyCard({
     product,
     href = "#/shop",
     linkText = "View →",
-    fallbackImg = "/products/placeholder1.png",
+    fallbackImg = `${import.meta.env.BASE_URL}products/placeholder1.png`,
 }) {
     const badge = useMemo(() => {
         const fulfillment = product?.fulfillment;
@@ -39,29 +40,27 @@ export default function ToyCard({
         return Number.isFinite(n) ? `$${n.toFixed(2)}` : null;
     }, [product]);
 
+    const src = product?.image || product?.imageUrl || fallbackImg;
+
     return (
         <div className="toy-card">
             <div className="toy-imgWrap">
-                <img
+                {/* shimmer overlay */}
+                <span className="img-sheen" aria-hidden="true" />
+
+                <SafeImage
                     className="toy-img"
-                    src={product?.image || product?.imageUrl || fallbackImg}
+                    src={src}
+                    fallbackSrc={fallbackImg}
                     alt={product?.name || "Toy"}
-                    loading="lazy"
-                    onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = fallbackImg;
-                    }}
                 />
             </div>
 
             <div className="toy-body">
                 <div className="toy-name">{product?.name}</div>
 
-                {product?.description ? (
-                    <p className="toy-blurb">{product.description}</p>
-                ) : null}
+                {product?.description ? <p className="toy-blurb">{product.description}</p> : null}
 
-                {/* Only show meta row if we actually have fulfillment/qty */}
                 {(product?.fulfillment || product?.qty !== undefined) && (
                     <div className="toy-meta">
                         <span>{stockText}</span>
@@ -69,7 +68,6 @@ export default function ToyCard({
                     </div>
                 )}
 
-                {/* Price + link row */}
                 <div className="toy-meta" style={{ marginTop: 0 }}>
                     <span style={{ fontWeight: 900 }}>{priceText}</span>
                     <a className="toy-link" href={href}>
