@@ -5,9 +5,13 @@ import useSiteContent from "../hooks/useSiteContent";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { localSiteContent } from "../data/siteContent";
+import { useNavigate } from "react-router-dom";
+
 
 export default function Admin() {
+    const navigate = useNavigate();
     const { content, usingRemote, loading, error } = useSiteContent();
+
 
     async function seedSiteContent() {
         await setDoc(doc(db, "siteContent", "main"), localSiteContent, { merge: false });
@@ -42,7 +46,13 @@ export default function Admin() {
                     Overwrite Firestore with current content
                 </button>
 
-                <button className="btn" onClick={() => signOut(auth)}>
+                <button
+                    className="btn"
+                    onClick={async () => {
+                        await signOut(auth);
+                        navigate("/", { replace: true });
+                    }}
+                >
                     Log out
                 </button>
             </div>
