@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import SafeImage from "./SafeImage";
+import { Link } from "react-router-dom";
 
 export default function ToyCard({
     product,
-    href = "#/shop",
+    to = "/shop",
     linkText = "View →",
     fallbackImg = `${import.meta.env.BASE_URL}products/placeholder1.png`,
 }) {
@@ -45,7 +46,6 @@ export default function ToyCard({
     return (
         <div className="toy-card">
             <div className="toy-imgWrap">
-                {/* shimmer overlay */}
                 <span className="img-sheen" aria-hidden="true" />
 
                 <SafeImage
@@ -70,9 +70,10 @@ export default function ToyCard({
 
                 <div className="toy-meta" style={{ marginTop: 0 }}>
                     <span style={{ fontWeight: 900 }}>{priceText}</span>
-                    <a className="toy-link" href={href}>
+
+                    <Link className="toy-link" to={to}>
                         {linkText}
-                    </a>
+                    </Link>
                 </div>
             </div>
         </div>

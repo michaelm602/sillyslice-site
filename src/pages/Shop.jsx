@@ -1,19 +1,22 @@
 import { useMemo, useState } from "react";
-import { products, categories } from "../data/products";
+import useProducts from "../hooks/useProducts";
+import { categories } from "../data/products";
 import ToyCard from "../components/ToyCard";
-
 
 export default function Shop() {
     const [cat, setCat] = useState("all");
+    const { products, loading } = useProducts();
 
     const filtered = useMemo(() => {
         if (cat === "all") return products;
         return products.filter((p) => p.category === cat);
-    }, [cat]);
+    }, [cat, products]);
 
     const categoryOptions = useMemo(() => {
         return [{ id: "all", name: "All" }, ...categories];
     }, []);
+
+    const fallbackImg = import.meta.env.BASE_URL + "products/placeholder1.png";
 
     return (
         <div className="shop-page">
@@ -21,7 +24,9 @@ export default function Shop() {
                 <div>
                     <h1 className="shop-title">Shop</h1>
                     <p className="shop-subtitle">
-                        Placeholder products for now — Audrey will upload the real ones later.
+                        {loading
+                            ? "Loading products…"
+                            : "Placeholder products for now — Audrey will upload the real ones later."}
                     </p>
                 </div>
 
@@ -51,13 +56,12 @@ export default function Shop() {
                         <ToyCard
                             key={p.id}
                             product={p}
-                            href={`#/shop/${p.id}`}
+                            to={`/shop/${p.id}`}
                             linkText="View →"
                             fallbackImg={`${import.meta.env.BASE_URL}products/placeholder1.png`}
                         />
                     ))}
                 </div>
-
             </section>
         </div>
     );

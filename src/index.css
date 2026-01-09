@@ -440,6 +440,18 @@ body {
   transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
 }
 
+/* Make a button look EXACTLY like a .nav-link */
+.nav-link--btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+
 .nav-link:hover {
   transform: translateY(-1px);
   background: color-mix(in srgb, var(--panel) 75%, transparent);

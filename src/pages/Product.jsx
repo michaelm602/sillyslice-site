@@ -1,24 +1,35 @@
 import { useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import SafeImage from "../components/SafeImage";
-import { products } from "../data/products";
+import useProducts from "../hooks/useProducts";
 
 export default function Product() {
     const { id } = useParams();
+    const { products, loading } = useProducts();
 
     const product = useMemo(
         () => products.find((p) => String(p.id) === String(id)),
-        [id]
+        [products, id]
     );
 
     const fallbackImg = `${import.meta.env.BASE_URL}products/placeholder1.png`;
+
+    if (loading && !product) {
+        return (
+            <div className="shop-page">
+                <Link className="toy-link" to="/shop">← Back to shop</Link>
+                <h1 className="shop-title">Loading…</h1>
+                <p className="shop-subtitle">Fetching the toy stash.</p>
+            </div>
+        );
+    }
 
     if (!product) {
         return (
             <div className="shop-page">
                 <h1 className="shop-title">Not found</h1>
                 <p className="shop-subtitle">That product doesn’t exist (yet).</p>
-                <a className="toy-link" href="#/shop">← Back to shop</a>
+                <Link className="toy-link" to="/shop">← Back to shop</Link>
             </div>
         );
     }
@@ -43,11 +54,13 @@ export default function Product() {
                 : "—";
 
     const price =
-        Number.isFinite(Number(product.price)) ? `$${Number(product.price).toFixed(2)}` : "";
+        Number.isFinite(Number(product.price))
+            ? `$${Number(product.price).toFixed(2)}`
+            : "";
 
     return (
         <div className="shop-page" style={{ gap: 14 }}>
-            <a className="toy-link" href="#/shop">← Back to shop</a>
+            <Link className="toy-link" to="/shop">← Back to shop</Link>
 
             <section className="card" style={{ padding: 18 }}>
                 <div

@@ -2,14 +2,27 @@
 import { Link } from "react-router-dom";
 import ToyCard from "../components/ToyCard";
 import { useFeaturedProducts } from "../hooks/useFeaturedProducts";
-import { siteContent } from "../data/siteContent";
+import useSiteContent from "../hooks/useSiteContent";
+import { localSiteContent } from "../data/siteContent";
 
 export default function Home() {
     const base = import.meta.env.BASE_URL;
-    const featured = useFeaturedProducts();
 
-    const hero = siteContent.hero;
-    const home = siteContent.home;
+    const { featured } = useFeaturedProducts(4);
+    const { content, loading: contentLoading } = useSiteContent();
+
+    // ✅ Merge Firestore over local so partial docs don't crash
+    const site = {
+        ...localSiteContent,
+        ...(content || {}),
+        hero: { ...localSiteContent.hero, ...(content?.hero || {}) },
+        home: { ...localSiteContent.home, ...(content?.home || {}) },
+        shop: { ...localSiteContent.shop, ...(content?.shop || {}) },
+        footer: { ...localSiteContent.footer, ...(content?.footer || {}) },
+    };
+
+    const hero = site.hero;
+    const home = site.home;
 
     return (
         <div style={{ display: "grid", gap: 18 }}>
@@ -31,7 +44,7 @@ export default function Home() {
             >
                 <img
                     src={`${base}logo-hero.png`}
-                    alt={siteContent.brandName}
+                    alt={site.brandName}
                     style={{
                         width: "clamp(140px, 14vw, 190px)",
                         height: "auto",
@@ -41,14 +54,14 @@ export default function Home() {
                     }}
                 />
 
-                <h1 className="sr-only">{siteContent.brandName}</h1>
+                <h1 className="sr-only">{site.brandName}</h1>
 
                 <p style={{ marginTop: 10, maxWidth: 700, fontSize: 16 }}>
                     {hero.subhead}
                 </p>
 
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
-                    <Link to="/shop" className="btn btn-primary" style={{ textDecoration: "none" }}>
+                    <Link to={hero.ctaTo} className="btn btn-primary">
                         {hero.ctaText}
                     </Link>
 
@@ -72,15 +85,16 @@ export default function Home() {
             {/* Featured */}
             <section className="card-soft featured">
                 <h2 className="featured-title">{home.featuredTitle}</h2>
-                <p className="featured-subtitle">{home.featuredSubtitle}</p>
+                <p className="featured-subtitle">
+                    {contentLoading ? "Loading…" : home.featuredSubtitle}
+                </p>
 
                 <div className="toy-grid">
                     {featured.map((p) => (
                         <ToyCard
                             key={p.id}
                             product={p}
-                            href={`#/shop/${p.id}`}
-
+                            to={`/shop/${p.id}`}
                             linkText="View in shop →"
                             fallbackImg={`${base}products/placeholder1.png`}
                         />

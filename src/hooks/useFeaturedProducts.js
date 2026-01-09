@@ -1,13 +1,13 @@
 // src/hooks/useFeaturedProducts.js
 import { useMemo } from "react";
-import { products } from "../data/products";
+import useProducts from "./useProducts";
 
 export function useFeaturedProducts(limit = 4) {
-    return useMemo(() => {
-        // DEV-ONLY: warn on duplicate featuredRank
+    const { products, loading } = useProducts();
+
+    const featured = useMemo(() => {
         if (import.meta.env.DEV) {
             const seen = new Map();
-
             products.forEach((p) => {
                 if (Number.isFinite(p.featuredRank)) {
                     if (seen.has(p.featuredRank)) {
@@ -25,12 +25,10 @@ export function useFeaturedProducts(limit = 4) {
             });
         }
 
-        // 1) Ranked featured products
         const ranked = products
             .filter((p) => Number.isFinite(p.featuredRank))
             .sort((a, b) => a.featuredRank - b.featuredRank);
 
-        // 2) Fallback: auto-fill if not enough ranked
         if (ranked.length >= limit) return ranked.slice(0, limit);
 
         const fill = products
@@ -38,5 +36,7 @@ export function useFeaturedProducts(limit = 4) {
             .slice(0, limit - ranked.length);
 
         return [...ranked, ...fill];
-    }, [limit]);
+    }, [products, limit]);
+
+    return { featured, loading };
 }
