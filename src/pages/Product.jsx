@@ -1,17 +1,13 @@
-import { useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import SafeImage from "../components/SafeImage";
 import useProducts from "../hooks/useProducts";
 
 export default function Product() {
     const { id } = useParams();
-    const { products, loading } = useProducts();
+    const { byId, loading } = useProducts();
 
-    const product = useMemo(
-        () => products.find((p) => String(p.id) === String(id)),
-        [products, id]
-    );
-
+    const product = byId.get(String(id));
+    const isDev = import.meta.env.DEV;
     const fallbackImg = `${import.meta.env.BASE_URL}products/placeholder1.png`;
 
     if (loading && !product) {
@@ -58,6 +54,9 @@ export default function Product() {
             ? `$${Number(product.price).toFixed(2)}`
             : "";
 
+    const hasRealImage = typeof product.image === "string" && product.image.trim() !== "";
+    const imgSrc = hasRealImage ? product.image : isDev ? fallbackImg : "";
+
     return (
         <div className="shop-page" style={{ gap: 14 }}>
             <Link className="toy-link" to="/shop">← Back to shop</Link>
@@ -74,12 +73,28 @@ export default function Product() {
                 >
                     <div className="toy-imgWrap" style={{ height: 320, borderRadius: 18 }}>
                         <span className="img-sheen" aria-hidden="true" />
-                        <SafeImage
-                            className="toy-img"
-                            src={product.image || product.imageUrl || fallbackImg}
-                            fallbackSrc={fallbackImg}
-                            alt={product.name}
-                        />
+
+                        {imgSrc ? (
+                            <SafeImage
+                                className="toy-img"
+                                src={imgSrc}
+                                fallbackSrc={isDev ? fallbackImg : undefined}
+                                alt={product.name}
+                            />
+                        ) : (
+                            <div
+                                style={{
+                                    height: "100%",
+                                    display: "grid",
+                                    placeItems: "center",
+                                    opacity: 0.75,
+                                    padding: 16,
+                                    textAlign: "center",
+                                }}
+                            >
+                                Image coming soon
+                            </div>
+                        )}
                     </div>
 
                     <div style={{ display: "grid", gap: 10, alignContent: "start" }}>

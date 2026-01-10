@@ -8,6 +8,21 @@ export const categories = [
 
 const base = import.meta.env.BASE_URL;
 
+// src/data/products.js
+
+export const PRODUCT_DEFAULTS = {
+    id: "",
+    name: "",
+    price: 0,
+    category: "fidget",          // safe default
+    fulfillment: "ready",        // "ready" | "made"
+    leadDays: null,              // number | null
+    qty: null,                   // number | null
+    description: "",
+    image: "",
+    featuredRank: null,          // number | null
+};
+
 export const products = [
     {
         id: "gear-clicker",

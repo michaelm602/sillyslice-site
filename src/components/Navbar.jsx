@@ -68,13 +68,15 @@ export default function Navbar() {
         return () => mq.removeEventListener("change", handle);
     }, []);
 
-    // Reset drag when closing
+    // Reset drag when closing (avoid “setState in effect” warnings)
     useEffect(() => {
-        if (!open) {
+        if (!open && (shiftX !== 0 || dragging)) {
             setShiftX(0);
             setDragging(false);
             dragRef.current.active = false;
         }
+        // only run when open changes
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
     function onDrawerPointerDown(e) {
@@ -96,9 +98,12 @@ export default function Navbar() {
 
         setDragging(true);
 
+        // capture pointer so move/up still fire even if finger leaves drawer
         try {
             e.currentTarget.setPointerCapture(e.pointerId);
-        } catch { }
+        } catch {
+            // no-op
+        }
     }
 
     function onDrawerPointerMove(e) {
@@ -108,15 +113,18 @@ export default function Navbar() {
         const dx = e.clientX - s.startX;
         const dy = e.clientY - s.startY;
 
+        // Decide if user is swiping horizontally (not scrolling)
         if (!s.horizontal) {
             if (Math.abs(dx) > Math.abs(dy) + 8) s.horizontal = true;
-            else return;
+            else return; // treat as normal scroll
         }
 
+        // Closing swipe = drag RIGHT (positive dx)
         const clamped = Math.max(0, Math.min(dx, s.width));
         s.shiftX = clamped;
         setShiftX(clamped);
 
+        // prevent page scrolling while doing horizontal swipe
         e.preventDefault?.();
     }
 
@@ -127,7 +135,7 @@ export default function Navbar() {
         s.active = false;
         setDragging(false);
 
-        const threshold = s.width * 0.28;
+        const threshold = s.width * 0.28; // 28% swipe closes
         if (s.shiftX > threshold) {
             setShiftX(0);
             close();
@@ -137,7 +145,9 @@ export default function Navbar() {
 
         try {
             e.currentTarget.releasePointerCapture(e.pointerId);
-        } catch { }
+        } catch {
+            // no-op
+        }
     }
 
     return (
@@ -145,19 +155,9 @@ export default function Navbar() {
             <div className="site-header-inner">
                 <NavLink to="/" className="brand" onClick={close} aria-label="Go to home">
                     <picture>
-                        <source
-                            srcSet={`${base}logo-mark-dark.png`}
-                            media="(prefers-color-scheme: dark)"
-                        />
-                        <source
-                            srcSet={`${base}logo-mark-light.png`}
-                            media="(prefers-color-scheme: light)"
-                        />
-                        <img
-                            src={`${base}logo-mark-dark.png`}
-                            alt="Silly Slice logo"
-                            className="brand-mark"
-                        />
+                        <source srcSet={`${base}logo-mark-dark.png`} media="(prefers-color-scheme: dark)" />
+                        <source srcSet={`${base}logo-mark-light.png`} media="(prefers-color-scheme: light)" />
+                        <img src={`${base}logo-mark-dark.png`} alt="Silly Slice logo" className="brand-mark" />
                     </picture>
                     <strong className="brand-name">Silly Slice</strong>
                 </NavLink>
@@ -180,23 +180,15 @@ export default function Navbar() {
                     {/* Admin controls (desktop) */}
                     {user ? (
                         <>
-                            <NavLink
-                                to="/admin"
-                                className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
-                            >
+                            <NavLink to="/admin" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
                                 Admin
                             </NavLink>
 
-                            <button
-                                type="button"
-                                className="nav-link nav-link--btn"
-                                onClick={handleLogout}
-                            >
+                            <button type="button" className="nav-link nav-link--btn" onClick={handleLogout}>
                                 Log out
                             </button>
                         </>
                     ) : null}
-
                 </nav>
 
                 {/* Mobile hamburger */}
@@ -261,12 +253,7 @@ export default function Navbar() {
                         {/* Admin controls (mobile) */}
                         {user ? (
                             <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                                <Link
-                                    to="/admin"
-                                    className="btn"
-                                    style={{ textDecoration: "none" }}
-                                    onClick={close}
-                                >
+                                <Link to="/admin" className="btn" style={{ textDecoration: "none" }} onClick={close}>
                                     Admin
                                 </Link>
 

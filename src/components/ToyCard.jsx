@@ -6,7 +6,8 @@ export default function ToyCard({
     product,
     to = "/shop",
     linkText = "View →",
-    fallbackImg = `${import.meta.env.BASE_URL}products/placeholder1.png`,
+    // allow caller to pass a fallback, but we will ONLY use it in DEV
+    fallbackImg,
 }) {
     const badge = useMemo(() => {
         const fulfillment = product?.fulfillment;
@@ -41,19 +42,47 @@ export default function ToyCard({
         return Number.isFinite(n) ? `$${n.toFixed(2)}` : null;
     }, [product]);
 
-    const src = product?.image || product?.imageUrl || fallbackImg;
+    const isDev = import.meta.env.DEV;
+    const devFallback = `${import.meta.env.BASE_URL}products/placeholder1.png`;
+
+    const hasRealImage =
+        typeof product?.image === "string" && product.image.trim() !== "";
+
+    // ✅ In PROD, we do NOT force placeholders.
+    // ✅ In DEV, we can fall back so you can build UI.
+    const src = hasRealImage
+        ? product.image
+        : isDev
+            ? (fallbackImg || devFallback)
+            : "";
 
     return (
         <div className="toy-card">
             <div className="toy-imgWrap">
                 <span className="img-sheen" aria-hidden="true" />
 
-                <SafeImage
-                    className="toy-img"
-                    src={src}
-                    fallbackSrc={fallbackImg}
-                    alt={product?.name || "Toy"}
-                />
+                {src ? (
+                    <SafeImage
+                        className="toy-img"
+                        src={src}
+                        // ✅ fallback only in DEV
+                        fallbackSrc={isDev ? (fallbackImg || devFallback) : undefined}
+                        alt={product?.name || "Toy"}
+                    />
+                ) : (
+                    <div
+                        style={{
+                            height: 170,
+                            display: "grid",
+                            placeItems: "center",
+                            opacity: 0.75,
+                            padding: 10,
+                            textAlign: "center",
+                        }}
+                    >
+                        Image coming soon
+                    </div>
+                )}
             </div>
 
             <div className="toy-body">

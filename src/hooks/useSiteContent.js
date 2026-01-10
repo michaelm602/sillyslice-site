@@ -55,8 +55,8 @@ export default function useSiteContent() {
                 setUsingRemote(false);
                 setError(e?.message || String(e));
             } finally {
-                if (!alive) return;
-                setLoading(false);
+                // ✅ no return inside finally (eslint no-unsafe-finally)
+                if (alive) setLoading(false);
             }
         }
 
