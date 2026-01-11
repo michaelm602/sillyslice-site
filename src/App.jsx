@@ -14,7 +14,7 @@ import Login from "./pages/Login";
 
 export default function App() {
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div className="app-shell">
       <Navbar />
 
       <main style={{ flex: 1, padding: "24px", maxWidth: 1100, margin: "0 auto", width: "100%" }}>
