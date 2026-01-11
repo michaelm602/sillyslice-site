@@ -14,14 +14,17 @@ export const PRODUCT_DEFAULTS = {
     id: "",
     name: "",
     price: 0,
-    category: "fidget",          // safe default
+    category: "fidget",
     fulfillment: "ready",        // "ready" | "made"
     leadDays: null,              // number | null
     qty: null,                   // number | null
     description: "",
     image: "",
-    featuredRank: null,          // number | null
+    gallery: [],                 // ✅ NEW
+    featuredRank: null,
+    active: true,                // ✅ NEW
 };
+
 
 export const products = [
     {

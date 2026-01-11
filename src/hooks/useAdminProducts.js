@@ -17,15 +17,17 @@ export default function useAdminProducts() {
 
     const refresh = useCallback(async () => {
         setLoading(true);
+        try {
+            const snap = await getDocs(collection(db, "products"));
+            const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-        const snap = await getDocs(collection(db, "products"));
-        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-
-        list.sort((a, b) => (a.featuredRank ?? 999) - (b.featuredRank ?? 999));
-
-        setItems(list);
-        setLoading(false);
+            list.sort((a, b) => (a.featuredRank ?? 999) - (b.featuredRank ?? 999));
+            setItems(list);
+        } finally {
+            setLoading(false);
+        }
     }, []);
+
 
     useEffect(() => {
         let alive = true;
@@ -67,12 +69,21 @@ export default function useAdminProducts() {
     }
 
     async function saveDraft(productId, draftPatch) {
+        // Merge patch into draft without overwriting other draft fields
+        const patch = {};
+        for (const [k, v] of Object.entries(draftPatch || {})) {
+            patch[`draft.${k}`] = v;
+        }
+
         await updateDoc(doc(db, "products", productId), {
-            draft: draftPatch,
+            ...patch,
             updatedAt: serverTimestamp(),
         });
+
         await refresh();
     }
+
+
 
     async function publishDraft(productId) {
         const current = items.find((p) => p.id === productId);

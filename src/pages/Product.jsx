@@ -1,14 +1,67 @@
-import { Link, useParams } from "react-router-dom";
+import { useMemo, useState, useCallback } from "react";
+import { useParams, Link } from "react-router-dom";
 import SafeImage from "../components/SafeImage";
 import useProducts from "../hooks/useProducts";
+import Lightbox from "../components/Lightbox";
 
 export default function Product() {
     const { id } = useParams();
-    const { byId, loading } = useProducts();
+    const { products, loading } = useProducts();
 
-    const product = byId.get(String(id));
-    const isDev = import.meta.env.DEV;
+    const product = useMemo(
+        () => products.find((p) => String(p.id) === String(id)),
+        [products, id]
+    );
+
     const fallbackImg = `${import.meta.env.BASE_URL}products/placeholder1.png`;
+
+    // Build image list (gallery is truth; gallery[0] = hero)
+    const images = useMemo(() => {
+        if (!product) return [];
+
+        const legacyMain = (product.image || product.imageUrl || "").trim();
+        const gallery = Array.isArray(product.gallery) ? product.gallery : [];
+
+        // hero should be the first gallery image if present, otherwise legacy main
+        const hero = (gallery[0] || legacyMain || "").trim();
+
+        // Build ordered list:
+        // hero first, then the rest of the gallery in order,
+        // but also include legacyMain if it's not already included.
+        const raw = [
+            hero,
+            ...gallery.slice(1),
+            legacyMain && legacyMain !== hero ? legacyMain : null,
+        ].filter(Boolean);
+
+        // de-dupe (keep order)
+        const seen = new Set();
+        const out = [];
+        for (const url of raw) {
+            if (!url) continue;
+            if (seen.has(url)) continue;
+            seen.add(url);
+            out.push(url);
+        }
+
+        return out.length ? out : [fallbackImg];
+    }, [product, fallbackImg]);
+
+
+
+
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [lbOpen, setLbOpen] = useState(false);
+
+    const heroSrc = images[activeIndex] || images[0] || fallbackImg;
+
+    const onPrev = useCallback(() => {
+        setActiveIndex((i) => (i - 1 + images.length) % images.length);
+    }, [images.length]);
+
+    const onNext = useCallback(() => {
+        setActiveIndex((i) => (i + 1) % images.length);
+    }, [images.length]);
 
     if (loading && !product) {
         return (
@@ -54,9 +107,6 @@ export default function Product() {
             ? `$${Number(product.price).toFixed(2)}`
             : "";
 
-    const hasRealImage = typeof product.image === "string" && product.image.trim() !== "";
-    const imgSrc = hasRealImage ? product.image : isDev ? fallbackImg : "";
-
     return (
         <div className="shop-page" style={{ gap: 14 }}>
             <Link className="toy-link" to="/shop">← Back to shop</Link>
@@ -71,32 +121,42 @@ export default function Product() {
                     }}
                     className="product-detail-grid"
                 >
-                    <div className="toy-imgWrap" style={{ height: 320, borderRadius: 18 }}>
-                        <span className="img-sheen" aria-hidden="true" />
-
-                        {imgSrc ? (
-                            <SafeImage
-                                className="toy-img"
-                                src={imgSrc}
-                                fallbackSrc={isDev ? fallbackImg : undefined}
-                                alt={product.name}
-                            />
-                        ) : (
-                            <div
-                                style={{
-                                    height: "100%",
-                                    display: "grid",
-                                    placeItems: "center",
-                                    opacity: 0.75,
-                                    padding: 16,
-                                    textAlign: "center",
-                                }}
-                            >
-                                Image coming soon
+                    {/* LEFT: hero + thumbs */}
+                    <div style={{ display: "grid", gap: 10 }}>
+                        <button
+                            className="product-heroBtn"
+                            onClick={() => setLbOpen(true)}
+                            type="button"
+                        >
+                            <div className="product-heroFrame">
+                                <SafeImage
+                                    className="product-heroImg"
+                                    src={heroSrc}
+                                    fallbackSrc={fallbackImg}
+                                    alt={product.name}
+                                />
                             </div>
-                        )}
+                            <span className="product-zoomTag">Zoom</span>
+                        </button>
+
+                        {images.length > 1 ? (
+                            <div className="thumb-grid">
+                                {images.map((src, idx) => (
+                                    <button
+                                        key={`${src}-${idx}`}
+                                        className={`thumb-btn ${idx === activeIndex ? "active" : ""}`}
+                                        onClick={() => setActiveIndex(idx)}
+                                        type="button"
+                                        aria-label={`View image ${idx + 1}`}
+                                    >
+                                        <SafeImage className="thumb-img" src={src} fallbackSrc={fallbackImg} alt="" />
+                                    </button>
+                                ))}
+                            </div>
+                        ) : null}
                     </div>
 
+                    {/* RIGHT: info */}
                     <div style={{ display: "grid", gap: 10, alignContent: "start" }}>
                         <h1 style={{ margin: 0, letterSpacing: "-0.02em" }}>{product.name}</h1>
 
@@ -119,6 +179,15 @@ export default function Product() {
                     </div>
                 </div>
             </section>
+
+            <Lightbox
+                open={lbOpen}
+                images={images}
+                index={activeIndex}
+                onClose={() => setLbOpen(false)}
+                onPrev={onPrev}
+                onNext={onNext}
+            />
         </div>
     );
 }

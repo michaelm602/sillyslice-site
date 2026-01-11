@@ -1,5 +1,5 @@
 // src/pages/Admin.jsx
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase";
 import useSiteContent from "../hooks/useSiteContent";
@@ -10,6 +10,25 @@ import { products as localProducts, categories } from "../data/products";
 import { useNavigate } from "react-router-dom";
 import { uploadProductImage } from "../utils/uploadImage";
 
+const LS_KEY = "sillyslice_admin_ui";
+
+function loadUiState() {
+    try {
+        const raw = localStorage.getItem(LS_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+}
+
+function saveUiState(next) {
+    try {
+        localStorage.setItem(LS_KEY, JSON.stringify(next));
+    } catch {
+        // ignore
+    }
+}
+
 function toNumberOrNull(v) {
     if (v === "" || v === null || v === undefined) return null;
     const n = Number(v);
@@ -18,7 +37,16 @@ function toNumberOrNull(v) {
 
 export default function Admin() {
     const navigate = useNavigate();
-    const [tab, setTab] = useState("site"); // "site" | "products"
+
+    // --- UI state persistence (tab / selected product / view) ---
+    const ui = loadUiState();
+    const [tab, setTab] = useState(ui?.tab || "site"); // "site" | "products"
+    const [selectedId, setSelectedId] = useState(ui?.selectedId || "");
+    const [view, setView] = useState(ui?.view || "draft"); // "draft" | "published"
+
+    useEffect(() => {
+        saveUiState({ tab, selectedId, view });
+    }, [tab, selectedId, view]);
 
     // Site content
     const { content, usingRemote, loading, error } = useSiteContent();
@@ -33,21 +61,25 @@ export default function Admin() {
         refresh,
     } = useAdminProducts();
 
-    const [selectedId, setSelectedId] = useState("");
+    // If stored selectedId doesn’t exist anymore, clear it
+    useEffect(() => {
+        if (!selectedId) return;
+        const exists = products.some((p) => p.id === selectedId);
+        if (!exists) setSelectedId("");
+    }, [products, selectedId]);
+
     const selected = useMemo(
         () => products.find((p) => p.id === selectedId) || null,
         [products, selectedId]
     );
 
-    const [view, setView] = useState("draft"); // "draft" | "published"
     const isDev = import.meta.env.DEV;
 
-    // Editing state (draft editor)
+    // Draft editor view model
     const editor = useMemo(() => {
         if (!selected) return null;
 
         const base = {
-            // published fields
             name: selected.name ?? "",
             price: selected.price ?? 0,
             category: selected.category ?? "fidget",
@@ -57,21 +89,66 @@ export default function Admin() {
             description: selected.description ?? "",
             featuredRank: selected.featuredRank ?? null,
             active: selected.active ?? true,
-            image: selected.image ?? "",
+            image: (selected.image ?? "").trim(),
+            gallery: Array.isArray(selected.gallery) ? selected.gallery.filter(Boolean) : [],
         };
 
-        const draft = selected.draft && typeof selected.draft === "object" ? selected.draft : null;
-        return view === "draft" && draft ? { ...base, ...draft } : base;
+        const draft =
+            selected.draft && typeof selected.draft === "object" ? selected.draft : null;
+
+        const merged = view === "draft" && draft ? { ...base, ...draft } : base;
+
+        // ✅ normalize AFTER merge so draft can't nuke it
+        const g = Array.isArray(merged.gallery) ? merged.gallery.filter(Boolean) : [];
+        const legacyMain = (merged.image ?? "").trim();
+        const hero = (g[0] || legacyMain).trim();
+        const normalizedGallery = hero ? [hero, ...g.filter((u) => u !== hero)] : g;
+
+        return {
+            ...merged,
+            image: hero,
+            gallery: normalizedGallery,
+        };
     }, [selected, view]);
+
 
     const [form, setForm] = useState(null);
 
-    // Keep form in sync when selection changes
-    // (we do it the simple way: reset when selectedId changes)
-    useMemo(() => {
+    // Keep form synced to selection/view changes
+    useEffect(() => {
         setForm(editor);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedId, view]);
+    }, [editor]);
+
+    const [dragIndex, setDragIndex] = useState(null);
+
+    function moveItem(arr, from, to) {
+        const next = arr.slice();
+        const [item] = next.splice(from, 1);
+        next.splice(to, 0, item);
+        return next;
+    }
+
+
+    async function applyGalleryOrder(nextGallery) {
+        if (!selected) return;
+
+        const cleaned = Array.isArray(nextGallery) ? nextGallery.filter(Boolean) : [];
+        const hero = (cleaned[0] || "").trim();
+
+        const next = { ...(form || {}), gallery: cleaned, image: hero };
+        setForm(next);
+
+        // Save immediately so order sticks
+        await saveDraft(selected.id, {
+            ...(selected.draft || {}),
+            gallery: cleaned,
+            image: hero,
+        });
+
+        await refresh();
+    }
+
+
 
     async function seedSiteContent() {
         await setDoc(doc(db, "siteContent", "main"), localSiteContent, { merge: false });
@@ -83,10 +160,19 @@ export default function Admin() {
         alert("Overwrote Firestore with current content");
     }
 
+    async function onSeedProducts() {
+        await seedFromLocal(localProducts);
+        alert("Seeded missing products to Firestore");
+    }
+
     async function onSaveDraft() {
         if (!selected || !form) return;
 
-        // Save ONLY draft fields (not published overwrite)
+        const gallery = Array.isArray(form.gallery) ? form.gallery.filter(Boolean) : [];
+        const hero = (gallery[0] || form.image || "").trim();
+        const finalGallery = hero ? [hero, ...gallery.filter(u => u !== hero)] : gallery;
+
+
         await saveDraft(selected.id, {
             name: form.name,
             price: Number(form.price) || 0,
@@ -97,10 +183,14 @@ export default function Admin() {
             description: form.description,
             featuredRank: toNumberOrNull(form.featuredRank),
             active: !!form.active,
-            image: form.image,
+
+            // keep hero synced with gallery[0]
+            image: hero,
+            gallery: finalGallery,
         });
 
         alert("Saved draft");
+        await refresh();
     }
 
     async function onPublish() {
@@ -109,23 +199,52 @@ export default function Admin() {
         alert("Published draft");
     }
 
-    async function onSeedProducts() {
-        await seedFromLocal(localProducts);
-        alert("Seeded missing products to Firestore");
-    }
-
     async function onUploadMainImage(file) {
         if (!selected || !file) return;
 
-        // Upload → get URL → write to draft
-        const url = await uploadProductImage({ file, productId: selected.id, kind: "main" });
+        const { url } = await uploadProductImage({ file, productId: selected.id, kind: "main" });
 
-        const next = { ...(form || {}), image: url };
+        const currentGallery = Array.isArray(form?.gallery) ? form.gallery.filter(Boolean) : [];
+        const nextGallery = [url, ...currentGallery.filter((u) => u !== url)];
+
+        const next = { ...(form || {}), image: url, gallery: nextGallery };
         setForm(next);
 
-        await saveDraft(selected.id, { ...(selected.draft || {}), image: url });
+        await saveDraft(selected.id, { ...(selected.draft || {}), image: url, gallery: nextGallery });
         await refresh();
     }
+
+
+
+    async function onUploadGalleryImages(fileList) {
+        if (!selected || !fileList || fileList.length === 0) return;
+
+        const files = Array.from(fileList);
+
+        const uploaded = await Promise.all(
+            files.map((file) => uploadProductImage({ file, productId: selected.id, kind: "gallery" }))
+        );
+
+        const newUrls = uploaded.map((u) => u.url);
+
+        const currentGallery = Array.isArray(form?.gallery) ? form.gallery.filter(Boolean) : [];
+        const merged = [...currentGallery, ...newUrls];
+
+        // de-dupe keep order
+        const seen = new Set();
+        const nextGallery = merged.filter((u) => u && !seen.has(u) && seen.add(u));
+
+        const hero = nextGallery[0] || form.image || "";
+
+        const next = { ...(form || {}), gallery: nextGallery, image: hero };
+        setForm(next);
+
+        await saveDraft(selected.id, { ...(selected.draft || {}), gallery: nextGallery, image: hero });
+        await refresh();
+    }
+
+
+
 
     return (
         <div className="card" style={{ padding: 24, display: "grid", gap: 16 }}>
@@ -145,10 +264,7 @@ export default function Admin() {
                     <button className={`btn ${tab === "site" ? "btn-primary" : ""}`} onClick={() => setTab("site")}>
                         Site Content
                     </button>
-                    <button
-                        className={`btn ${tab === "products" ? "btn-primary" : ""}`}
-                        onClick={() => setTab("products")}
-                    >
+                    <button className={`btn ${tab === "products" ? "btn-primary" : ""}`} onClick={() => setTab("products")}>
                         Products
                     </button>
 
@@ -216,8 +332,15 @@ export default function Admin() {
                             <div style={{ display: "grid", gap: 8 }}>
                                 {products.map((p) => {
                                     const isSelected = p.id === selectedId;
-                                    const hasImage = typeof p.image === "string" && p.image.trim() !== "";
-                                    const isActive = p.active !== false;
+
+                                    const source =
+                                        p.draft && typeof p.draft === "object" ? { ...p, ...p.draft } : p;
+
+                                    const hero =
+                                        source.image || (Array.isArray(source.gallery) ? source.gallery[0] : "") || "";
+
+                                    const hasImage = typeof hero === "string" && hero.trim() !== "";
+                                    const isActive = source.active !== false;
 
                                     return (
                                         <button
@@ -236,15 +359,16 @@ export default function Admin() {
                                             }}
                                             title={p.id}
                                         >
-                                            <div style={{ fontWeight: 800 }}>{p.name || p.id}</div>
+                                            <div style={{ fontWeight: 800 }}>{source.name || p.id}</div>
                                             <div style={{ fontSize: 12, opacity: 0.8 }}>
-                                                {p.category || "—"} • {hasImage ? "image ✅" : "no image ⚠️"} •{" "}
+                                                {source.category || "—"} • {hasImage ? "image ✅" : "no image ⚠️"} •{" "}
                                                 {isActive ? "active" : "inactive"}
                                                 {p.draft ? " • draft ✍️" : ""}
                                             </div>
                                         </button>
                                     );
                                 })}
+
                             </div>
                         </div>
 
@@ -280,7 +404,7 @@ export default function Admin() {
                                         </div>
                                     </div>
 
-                                    {/* Image upload */}
+                                    {/* Main image upload */}
                                     <div style={{ display: "grid", gap: 8 }}>
                                         <div style={{ fontWeight: 800 }}>Main image</div>
 
@@ -303,12 +427,107 @@ export default function Admin() {
                                             <img
                                                 src={form.image}
                                                 alt=""
-                                                style={{ width: "100%", maxWidth: 520, borderRadius: 14, border: "1px solid rgba(255,255,255,0.14)" }}
+                                                style={{
+                                                    width: "100%",
+                                                    maxWidth: 520,
+                                                    height: 280,
+                                                    objectFit: "contain",
+                                                    background: "rgba(0,0,0,0.25)",
+                                                    borderRadius: 14,
+                                                    border: "1px solid rgba(255,255,255,0.14)",
+                                                }}
                                             />
+
+
                                         ) : (
                                             <div style={{ opacity: 0.7 }}>No image yet.</div>
                                         )}
                                     </div>
+                                    {/* Gallery images */}
+                                    <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
+                                        <div style={{ fontWeight: 800 }}>Gallery images</div>
+
+                                        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                multiple
+                                                onChange={(e) => {
+                                                    const files = Array.from(e.target.files || []);
+                                                    if (files.length) onUploadGalleryImages(files);
+                                                    e.target.value = "";
+                                                }}
+                                            />
+                                            <div style={{ fontSize: 12, opacity: 0.8 }}>
+                                                Multi-upload saves to <strong>draft</strong>. Publish when ready.
+                                            </div>
+                                        </div>
+
+                                        {form.gallery?.length ? (
+                                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, 120px)", gap: 10 }}>
+                                                {form.gallery.map((url, i) => {
+                                                    const isHero = i === 0;
+
+                                                    return (
+                                                        <div
+                                                            key={url}
+                                                            draggable
+                                                            onDragStart={() => setDragIndex(i)}
+                                                            onDragOver={(e) => e.preventDefault()}
+                                                            onDrop={async () => {
+                                                                if (dragIndex === null || dragIndex === i) return;
+                                                                const nextGallery = moveItem(form.gallery, dragIndex, i);
+                                                                setDragIndex(null);
+                                                                await applyGalleryOrder(nextGallery);
+                                                            }}
+                                                            title={isHero ? "Hero image (first)" : "Drag to reorder"}
+                                                            style={{
+                                                                width: 120,
+                                                                display: "grid",
+                                                                gap: 6,
+                                                                cursor: "grab",
+                                                                userSelect: "none",
+                                                            }}
+                                                        >
+                                                            <img
+                                                                src={url}
+                                                                alt=""
+                                                                style={{
+                                                                    width: 120,
+                                                                    height: 120,
+                                                                    objectFit: "cover",
+                                                                    borderRadius: 10,
+                                                                    border: isHero
+                                                                        ? "2px solid rgba(57,214,255,0.8)"
+                                                                        : "1px solid rgba(255,255,255,0.14)",
+                                                                }}
+                                                            />
+
+                                                            <button
+                                                                className="btn"
+                                                                type="button"
+                                                                onClick={async () => {
+                                                                    const nextGallery = [url, ...form.gallery.filter((u) => u !== url)];
+                                                                    await applyGalleryOrder(nextGallery);
+                                                                }}
+                                                                style={{
+                                                                    padding: "6px 8px",
+                                                                    fontSize: 12,
+                                                                    borderRadius: 10,
+                                                                }}
+                                                            >
+                                                                Make hero
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })}
+
+                                            </div>
+                                        ) : (
+                                            <div style={{ opacity: 0.7 }}>No gallery images yet.</div>
+                                        )}
+                                    </div>
+
 
                                     {/* Form fields */}
                                     <div style={{ display: "grid", gap: 10 }}>
