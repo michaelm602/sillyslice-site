@@ -1,316 +1,146 @@
 Silly Slice — Project State (Updated)
-🔗 Quick links
 
+🔗 Quick links
 Repo: https://github.com/michaelm602/sillyslice-site
 
 Live (GitHub Pages): https://michaelm602.github.io/sillyslice-site/#/
 
 🎯 Current goal
 
-Build a cute + playful multi-page storefront (React + Vite) with a polished mobile experience — with content editable for Audrey (data/content only, not layout).
+Build a cute + playful multi-page storefront (React + Vite) with a polished, mobile-first experience, where content is editable (data/content only — not layout).
 
 🧭 Pages
 
-Home
+Home ✅
 
-Shop
+Shop ✅
 
-About
+About ✅
 
-Contact
+Contact ✅
 
-Product Detail (NEW): /shop/:id
+Product Detail (/shop/:id) ✅
 
-Admin (NEW): /admin (auth-protected)
+Admin (/admin, auth-protected) ⏳ (scaffolded / planned)
 
 🧱 Tech stack
 
 Vite + React
 
-React Router (HashRouter)
+React Router (HashRouter) — GitHub Pages safe
 
-GitHub Pages refresh support
+CSS variables theme (dark + light via prefers-color-scheme)
 
-CSS variables theme
+Centralized styling in src/index.css
 
-Auto light/dark via prefers-color-scheme
+Firebase (Firestore + Auth + Storage wired / partially used)
 
-Styling centralized in src/index.css
-
-gh-pages deployment: build → deploy dist
-
-Firebase
-
-Firestore
-
-Auth
-
-Storage (wired, used later)
+gh-pages deploy (build → dist → deploy)
 
 ✅ What works right now
-Core routing + deploy
 
-GitHub Pages deploy is stable
+Stable GitHub Pages deployment
 
-Routing works correctly with hash routes:
+Routing works correctly with hash routes
 
-/sillyslice-site/#/
+Responsive layout across mobile / tablet / desktop
 
-/sillyslice-site/#/shop
+Shop grid + product cards polished
 
-/sillyslice-site/#/shop/:id ✅
+Product detail page with:
 
-/sillyslice-site/#/about
+Hero image
 
-/sillyslice-site/#/contact
+Thumbnail gallery
 
-/sillyslice-site/#/admin ✅ (requires login)
+Stock / price / badges
 
-UI
+Custom Lightbox (no library):
 
-Navbar active tab styling matches playful gradient theme
+Fixed viewport overlay
 
-Mobile drawer works + swipe-to-close
+Always centered (no scroll drift)
 
-Shop renders mock product data into styled ToyCards
+No image cropping
 
-Product detail pages render correctly (“View →”)
+Keyboard nav (ESC / arrows)
 
-SafeImage + shimmer loading works (no ugly image pop-in)
+Swipe support on mobile
 
-🧩 Reusable UI architecture
-ToyCard component used by:
+SafeImage component:
 
-Home “Featured”
+Handles cached images cleanly
 
-Shop grid
+Prevents flicker
 
-Supports:
+Lazy loading + async decoding
 
-product prop: name, image, description, price, qty, fulfillment, leadDays
+Navbar:
 
-to (React Router navigation) + linkText
+Desktop pills
 
-fallbackImg
+Mobile drawer nav
 
-Uses SafeImage + shimmer overlay
+Hero section:
 
-⭐ Featured system
+Background image
 
-featuredRank added to products in src/data/products.js
+Dark overlay for readability
 
-Featured is not hardcoded
+Brand logo displayed larger and more legible
 
-useFeaturedProducts() hook centralizes logic:
+🔧 Recent fixes & improvements
 
-filter products with numeric featuredRank
+✅ Fixed lightbox centering bug (caused by grid + transform interactions)
 
-sort asc
+✅ Fixed lightbox image oversizing
 
-slice to limit (default 4)
+✅ Locked lightbox layout to a single grid cell
 
-fallback fill
+✅ Prevented background scroll while lightbox is open
 
-DEV safety:
+✅ Logo size in hero increased slightly using clamp() for better presence
 
-warns on duplicate featuredRank in dev only (import.meta.env.DEV)
+✅ Removed image cropping across product cards + hero
 
-🆕 Firebase integration (DONE this session)
-Firebase setup
+✅ Reduced mobile flicker and animation jitter
 
-src/firebase.js created and wired:
+✅ Fixed z-index conflicts (navbar vs overlays)
 
-Firestore (db)
+🧠 Current approach
 
-Auth (auth)
+Placeholder products + images (local / Firebase-ready)
 
-Storage (storage)
+Reusable card components shared between Home + Shop
 
-.env.local is used for Firebase keys (VITE_FIREBASE_*)
+Featured section pulls from product data (no hardcoded featured list)
 
-File lives at project root, same level as package.json
+Content copy centralized (siteContent pattern)
 
-Firestore content system
+Layout remains locked; content is the only editable layer
 
-Firestore collection: siteContent
+🚧 Next planned steps
 
-Document: siteContent/main
+Admin page:
 
-Local fallback content lives in:
+Upload / delete product images
 
-src/data/siteContent.js
+Edit product data (name, price, stock, flags)
 
-renamed export: localSiteContent (prevents naming collisions)
+Replace placeholder images with real product photos
 
-Hook created/fixed:
+Inventory tracking (basic counts)
 
-src/hooks/useSiteContent.js
+PayPal checkout (Stripe later if needed)
 
-Pulls Firestore doc if present
+Optional hosting move to DigitalOcean + custom domain (future)
 
-Deep merges remote over local fallback so missing Firestore keys never crash UI
+Performance polish (image compression + preload strategy)
 
-Returns: { content, usingRemote, loading, error }
+🧨 Non-goals (for now)
 
-Admin status + seeding
+No design overhaul
 
-src/pages/Admin.jsx shows:
+No animation-heavy gimmicks
 
-“Connected to Firestore” vs “Using local fallback”
-
-JSON preview of merged content
-
-Admin includes a Seed button:
-
-writes localSiteContent into Firestore (siteContent/main)
-
-guarantees full schema exists (no partial-doc white screens)
-
-🛡️ Auth + Admin route (DONE this session)
-
-/admin is protected with:
-
-src/components/RequireAuth.jsx using react-firebase-hooks/auth
-
-redirects to / if not logged in
-
-Admin login is via Firebase Auth (email/password)
-
-🆕 Navbar admin controls (DONE this session)
-
-Navbar shows Admin + Log out when a user is logged in:
-
-visible in desktop nav
-
-visible in mobile drawer
-
-Logout signs out and navigates home
-
-🆕 Product detail page (NEW)
-
-src/pages/Product.jsx
-
-Route: /shop/:id
-
-Pulls product by id from local products data (for now)
-
-Shows image, name, price, stock/fulfillment badge, description
-
-“Back to shop” link
-
-Disabled “Add to cart (coming soon)” placeholder CTA
-
-Shop + Featured cards link to product pages:
-
-#/shop/${p.id} (handled via to="/shop/:id" in ToyCard now)
-
-🖼 Images setup (current)
-
-Placeholder images: public/products/*
-
-Hero image: public/hero/printer.jpg
-
-Brand images: public/logo-hero.png, public/logo-mark-*.png, etc.
-
-GitHub Pages path gotcha solved
-
-Must respect Vite base path in production
-
-Using:
-
-import.meta.env.BASE_URL
-
-Vite config:
-
-base: mode === "production" ? "/sillyslice-site/" : "/"
-
-📁 Key files (current)
-
-src/index.css (theme, navbar, drawer, cards, shimmer, responsive)
-
-src/firebase.js (Firebase init)
-
-src/data/siteContent.js (localSiteContent fallback + seed source)
-
-src/hooks/useSiteContent.js (Firestore-first w/ deep-merge fallback)
-
-src/components/RequireAuth.jsx (protects /admin)
-
-src/pages/Admin.jsx (status + JSON preview + seed)
-
-src/components/SafeImage.jsx
-
-src/components/ToyCard.jsx
-
-src/pages/Home.jsx (uses merged site content safely)
-
-src/pages/Shop.jsx
-
-src/pages/Product.jsx
-
-src/data/products.js (local products + categories + featuredRank)
-
-src/App.jsx (routes incl /admin)
-
-⚠️ Notes
-
-White screen issues were caused by:
-
-renamed export (siteContent → localSiteContent) without updating imports
-
-Firestore doc being partial (only brandName) while UI expected hero/home
-
-Fixed by:
-
-aligning exports/imports
-
-deep merge fallback in useSiteContent
-
-⏭️ Next up (priority order)
-1) Products → Firestore (next session)
-
-Firestore collection: products (doc id = product id)
-
-Build:
-
-seed from local products.js
-
-useProducts() hook with Firestore-first + local fallback (same pattern as siteContent)
-
-2) Admin: Audrey-safe editing UI
-
-/admin content controls (no JSON editing)
-
-edit hero: headline/subhead/CTA text + CTA route
-
-edit home sections
-
-edit shop empty state copy
-
-Later: draft/publish workflow for preview mode
-
-3) Storage uploads
-
-Storage folders:
-
-hero/
-
-products/
-
-(later) products-videos/
-
-Upload UI in admin + store URLs in Firestore
-
-4) Shop polish
-
-Move Shop page copy to Firestore-driven siteContent.shop
-
-Empty state uses siteContent.shop.emptyTitle/emptyText
-
-5) Checkout groundwork (later)
-
-Add-to-cart state (local)
-
-PayPal checkout integration
-
-Inventory + lead time fields supported in admin
+No external UI libraries for core features (lightbox, cards, nav)

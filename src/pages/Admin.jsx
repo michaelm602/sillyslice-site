@@ -9,6 +9,8 @@ import { localSiteContent } from "../data/siteContent";
 import { products as localProducts, categories } from "../data/products";
 import { useNavigate } from "react-router-dom";
 import { uploadProductImage } from "../utils/uploadImage";
+import { deleteStorageImage } from "../utils/deleteImage";
+
 
 const LS_KEY = "sillyslice_admin_ui";
 
@@ -135,17 +137,26 @@ export default function Admin() {
         const cleaned = Array.isArray(nextGallery) ? nextGallery.filter(Boolean) : [];
         const hero = (cleaned[0] || "").trim();
 
-        const next = { ...(form || {}), gallery: cleaned, image: hero };
+        const next = { ...(form || {}), gallery: cleaned, image: hero, galleryPaths, imagePath: nextImagePath };
         setForm(next);
 
+
         // Save immediately so order sticks
+        const galleryPaths =
+            (selected?.draft && typeof selected.draft.galleryPaths === "object" && selected.draft.galleryPaths) ||
+            (form?.galleryPaths && typeof form.galleryPaths === "object" ? form.galleryPaths : {}) ||
+            {};
+
+        const nextImagePath = hero ? (galleryPaths[hero] || form.imagePath || null) : null;
+
         await saveDraft(selected.id, {
             ...(selected.draft || {}),
             gallery: cleaned,
             image: hero,
+            galleryPaths,
+            imagePath: nextImagePath,
         });
 
-        await refresh();
     }
 
 
@@ -202,17 +213,43 @@ export default function Admin() {
     async function onUploadMainImage(file) {
         if (!selected || !file) return;
 
-        const { url } = await uploadProductImage({ file, productId: selected.id, kind: "main" });
+        const { url, path } = await uploadProductImage({
+            file,
+            productId: selected.id,
+            kind: "main",
+        });
 
         const currentGallery = Array.isArray(form?.gallery) ? form.gallery.filter(Boolean) : [];
         const nextGallery = [url, ...currentGallery.filter((u) => u !== url)];
 
-        const next = { ...(form || {}), image: url, gallery: nextGallery };
+        // keep a URL->path map for reliable deletion
+        const currentPaths =
+            (selected?.draft && typeof selected.draft.galleryPaths === "object" && selected.draft.galleryPaths) ||
+            (form?.galleryPaths && typeof form.galleryPaths === "object" ? form.galleryPaths : {}) ||
+            {};
+
+        const nextGalleryPaths = { ...currentPaths, [url]: path };
+
+        const next = {
+            ...(form || {}),
+            image: url,
+            gallery: nextGallery,
+            imagePath: path,
+            galleryPaths: nextGalleryPaths,
+        };
         setForm(next);
 
-        await saveDraft(selected.id, { ...(selected.draft || {}), image: url, gallery: nextGallery });
+        await saveDraft(selected.id, {
+            ...(selected.draft || {}),
+            image: url,
+            gallery: nextGallery,
+            imagePath: path,
+            galleryPaths: nextGalleryPaths,
+        });
+
         await refresh();
     }
+
 
 
 
@@ -222,7 +259,9 @@ export default function Admin() {
         const files = Array.from(fileList);
 
         const uploaded = await Promise.all(
-            files.map((file) => uploadProductImage({ file, productId: selected.id, kind: "gallery" }))
+            files.map((file) =>
+                uploadProductImage({ file, productId: selected.id, kind: "gallery" })
+            )
         );
 
         const newUrls = uploaded.map((u) => u.url);
@@ -236,12 +275,99 @@ export default function Admin() {
 
         const hero = nextGallery[0] || form.image || "";
 
-        const next = { ...(form || {}), gallery: nextGallery, image: hero };
+        const currentPaths =
+            (selected?.draft && typeof selected.draft.galleryPaths === "object" && selected.draft.galleryPaths) ||
+            (form?.galleryPaths && typeof form.galleryPaths === "object" ? form.galleryPaths : {}) ||
+            {};
+
+        const nextGalleryPaths = { ...currentPaths };
+        for (const { url, path } of uploaded) {
+            nextGalleryPaths[url] = path;
+        }
+
+        // if hero is the newly uploaded image, keep imagePath in sync too
+        const nextImagePath =
+            hero === form.image
+                ? (form.imagePath || null)
+                : (nextGalleryPaths[hero] || form.imagePath || null);
+
+        const next = {
+            ...(form || {}),
+            gallery: nextGallery,
+            image: hero,
+            galleryPaths: nextGalleryPaths,
+            imagePath: nextImagePath,
+        };
         setForm(next);
 
-        await saveDraft(selected.id, { ...(selected.draft || {}), gallery: nextGallery, image: hero });
+        await saveDraft(selected.id, {
+            ...(selected.draft || {}),
+            gallery: nextGallery,
+            image: hero,
+            galleryPaths: nextGalleryPaths,
+            imagePath: nextImagePath,
+        });
+
         await refresh();
     }
+
+    async function onDeleteImageUrl(url) {
+        if (!selected || !form) return;
+
+        const ok = window.confirm("Delete this image forever? No undo.");
+        if (!ok) return;
+
+        // find path from draft map (best) or fallback to parsing url
+        const galleryPaths =
+            (selected?.draft && typeof selected.draft.galleryPaths === "object" && selected.draft.galleryPaths) ||
+            (form?.galleryPaths && typeof form.galleryPaths === "object" ? form.galleryPaths : {}) ||
+            {};
+
+        const path = galleryPaths[url] || (form.image === url ? form.imagePath : null);
+
+        // Remove from gallery
+        const nextGallery = (form.gallery || []).filter((u) => u !== url);
+
+        // If we deleted the hero, promote next image
+        const nextHero = nextGallery[0] || "";
+
+        // update map
+        const nextGalleryPaths = { ...galleryPaths };
+        delete nextGalleryPaths[url];
+
+        const nextImagePath = nextHero ? (nextGalleryPaths[nextHero] || null) : null;
+
+        // optimistic UI update
+        setForm({
+            ...form,
+            gallery: nextGallery,
+            image: nextHero,
+            galleryPaths: nextGalleryPaths,
+            imagePath: nextImagePath,
+        });
+
+        try {
+            // 1) delete from Storage
+            await deleteStorageImage({ path, url });
+
+            // 2) save draft changes
+            await saveDraft(selected.id, {
+                ...(selected.draft || {}),
+                gallery: nextGallery,
+                image: nextHero,
+                galleryPaths: nextGalleryPaths,
+                imagePath: nextImagePath,
+            });
+
+            await refresh();
+        } catch (err) {
+            console.error(err);
+            alert(err.message || "Delete failed");
+            await refresh(); // resync in case optimistic UI got out of whack
+        }
+    }
+
+
 
 
 
@@ -422,6 +548,17 @@ export default function Admin() {
                                                 Upload saves to <strong>draft</strong>. Publish when it looks right.
                                             </div>
                                         </div>
+                                        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+                                            <button
+                                                className="btn"
+                                                type="button"
+                                                onClick={() => onDeleteImageUrl(form.image)}
+                                                disabled={!form.image}
+                                                style={{ border: "1px solid rgba(255,80,120,0.6)" }}
+                                            >
+                                                Delete main image
+                                            </button>
+                                        </div>
 
                                         {form.image ? (
                                             <img
@@ -517,6 +654,19 @@ export default function Admin() {
                                                                 }}
                                                             >
                                                                 Make hero
+                                                            </button>
+                                                            <button
+                                                                className="btn"
+                                                                type="button"
+                                                                onClick={() => onDeleteImageUrl(url)}
+                                                                style={{
+                                                                    padding: "6px 8px",
+                                                                    fontSize: 12,
+                                                                    borderRadius: 10,
+                                                                    border: "1px solid rgba(255,80,120,0.6)",
+                                                                }}
+                                                            >
+                                                                Delete
                                                             </button>
                                                         </div>
                                                     );
