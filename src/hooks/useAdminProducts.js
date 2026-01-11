@@ -90,14 +90,21 @@ export default function useAdminProducts() {
         const draft = current?.draft;
         if (!draft) return;
 
-        await updateDoc(doc(db, "products", productId), {
+        // Only promote these if they exist in draft, otherwise keep published as-is.
+        const patch = {
             ...draft,
             draft: deleteField(),
             updatedAt: serverTimestamp(),
-        });
+        };
+
+        if (draft.imagePath !== undefined) patch.imagePath = draft.imagePath;
+        if (draft.galleryPaths !== undefined) patch.galleryPaths = draft.galleryPaths;
+
+        await updateDoc(doc(db, "products", productId), patch);
 
         await refresh();
     }
+
 
     return { items, loading, refresh, seedFromLocal, saveDraft, publishDraft };
 }

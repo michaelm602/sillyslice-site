@@ -93,7 +93,15 @@ export default function Admin() {
             active: selected.active ?? true,
             image: (selected.image ?? "").trim(),
             gallery: Array.isArray(selected.gallery) ? selected.gallery.filter(Boolean) : [],
+
+            // ✅ add these
+            imagePath: selected.imagePath ?? null,
+            galleryPaths:
+                selected.galleryPaths && typeof selected.galleryPaths === "object"
+                    ? selected.galleryPaths
+                    : {},
         };
+
 
         const draft =
             selected.draft && typeof selected.draft === "object" ? selected.draft : null;
@@ -101,16 +109,33 @@ export default function Admin() {
         const merged = view === "draft" && draft ? { ...base, ...draft } : base;
 
         // ✅ normalize AFTER merge so draft can't nuke it
+        // ✅ normalize AFTER merge so draft can't nuke it
         const g = Array.isArray(merged.gallery) ? merged.gallery.filter(Boolean) : [];
         const legacyMain = (merged.image ?? "").trim();
         const hero = (g[0] || legacyMain).trim();
         const normalizedGallery = hero ? [hero, ...g.filter((u) => u !== hero)] : g;
 
+        // ✅ paths: take from merged (draft overrides base when view=draft)
+        const mergedGalleryPaths =
+            merged.galleryPaths && typeof merged.galleryPaths === "object"
+                ? merged.galleryPaths
+                : {};
+
+        const nextImagePath = hero
+            ? (mergedGalleryPaths[hero] || merged.imagePath || null)
+            : null;
+
         return {
             ...merged,
             image: hero,
             gallery: normalizedGallery,
+
+            // ✅ keep these consistent
+            galleryPaths: mergedGalleryPaths,
+            imagePath: nextImagePath,
         };
+
+
     }, [selected, view]);
 
 
