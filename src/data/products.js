@@ -7,6 +7,7 @@ export const categories = [
 ];
 
 const base = import.meta.env.BASE_URL;
+const PH = `${base}products/placeholder1.png`;
 
 // src/data/products.js
 
@@ -35,7 +36,7 @@ export const products = [
         fulfillment: "ready",
         qty: 12,
         description: "Clicky little gear toy. Loud enough to annoy your enemies.",
-        image: `${base}products/placeholder1.png`,
+        image: PH,
         featuredRank: 1,
     },
     {
