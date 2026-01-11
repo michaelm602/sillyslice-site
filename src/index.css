@@ -1572,6 +1572,87 @@ z-index: 100000; /* belt + suspenders */
 }
 
 
+/* =========================
+   Admin (responsive)
+   ========================= */
 
+.admin-shell{
+  display: grid;
+  gap: 12px;
+  align-items: start;
+  grid-template-columns: 300px 1fr;
+}
+
+/* panels */
+.admin-list{
+  padding: 12px;
+  min-width: 0;
+}
+
+.admin-editor{
+  padding: 16px;
+  min-width: 0; /* prevents grid overflow */
+}
+
+/* list buttons shouldn't cause horizontal scroll */
+.admin-list .btn{
+  width: 100%;
+  text-align: left;
+}
+
+/* ---------- tablet + mobile: stack ---------- */
+@media (max-width: 860px){
+  .admin-shell{
+    grid-template-columns: 1fr;
+  }
+
+  /* keep list usable but not endless */
+  .admin-list{
+    max-height: 42vh;
+    overflow: auto;
+  }
+
+  .admin-editor{
+    padding: 14px;
+  }
+}
+
+/* ---------- small phones: tighten ---------- */
+@media (max-width: 520px){
+  .admin-list{
+    max-height: 38vh;
+  }
+
+  .admin-editor{
+    padding: 12px;
+  }
+}
+
+/* ---------- gallery thumbs: responsive grid ---------- */
+.admin-galleryGrid{
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+}
+
+/* thumbs scale nicely in the grid */
+.admin-galleryGrid img{
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+}
+
+/* make the per-thumb card not fight the responsive layout */
+.admin-galleryGrid > div{
+  width: auto !important;
+}
+
+@media (max-width: 640px){
+  .admin-editor .btn{
+    width: auto;
+  }
+}
 
 

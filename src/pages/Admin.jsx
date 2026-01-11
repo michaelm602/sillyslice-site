@@ -468,16 +468,9 @@ export default function Admin() {
                         </div>
                     </div>
 
-                    <div
-                        style={{
-                            display: "grid",
-                            gap: 12,
-                            gridTemplateColumns: "300px 1fr",
-                            alignItems: "start",
-                        }}
-                    >
+                    <div className="admin-shell">
                         {/* Left list */}
-                        <div className="card-soft" style={{ padding: 12 }}>
+                        <div className="card-soft admin-list">
                             <div style={{ fontWeight: 900, marginBottom: 10 }}>Products</div>
 
                             <div style={{ display: "grid", gap: 8 }}>
@@ -524,7 +517,7 @@ export default function Admin() {
                         </div>
 
                         {/* Right editor */}
-                        <div className="card-soft" style={{ padding: 16 }}>
+                        <div className="card-soft admin-editor">
                             {!selected ? (
                                 <div style={{ opacity: 0.8 }}>
                                     Pick a product on the left to edit. Upload an image + publish to make it show in the Shop.
@@ -626,7 +619,7 @@ export default function Admin() {
                                         </div>
 
                                         {form.gallery?.length ? (
-                                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, 120px)", gap: 10 }}>
+                                            <div className="admin-galleryGrid">
                                                 {form.gallery.map((url, i) => {
                                                     const isHero = i === 0;
 
