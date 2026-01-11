@@ -11,24 +11,42 @@ export default function SafeImage({
     const [loaded, setLoaded] = useState(false);
     const [currentSrc, setCurrentSrc] = useState(src);
 
+    // ✅ Smart src change: if cached, mark loaded immediately (no flicker)
     useEffect(() => {
+        if (!src) return;
+
+        // If it's the same src, don't thrash state
+        setCurrentSrc((prev) => (prev === src ? prev : src));
+
+        let cancelled = false;
+
+        const probe = new Image();
+        probe.src = src;
+
+        if (probe.complete && probe.naturalWidth > 0) {
+            // cached: go straight to loaded (skip shimmer/opacity dip)
+            if (!cancelled) setLoaded(true);
+            return () => {
+                cancelled = true;
+            };
+        }
+
+        // not cached: show shimmer until it loads
         setLoaded(false);
-        setCurrentSrc(src);
+
+        return () => {
+            cancelled = true;
+        };
     }, [src]);
 
-    // If the image is already cached, onLoad may not fire on route changes.
+    // ✅ When the DOM img is already complete (some browsers), sync loaded
     useEffect(() => {
         const img = imgRef.current;
         if (!img) return;
 
-        // Let the browser apply src first, then check if it’s already complete.
-        const id = requestAnimationFrame(() => {
-            if (img.complete && img.naturalWidth > 0) {
-                setLoaded(true);
-            }
-        });
-
-        return () => cancelAnimationFrame(id);
+        if (img.complete && img.naturalWidth > 0) {
+            setLoaded(true);
+        }
     }, [currentSrc]);
 
     return (

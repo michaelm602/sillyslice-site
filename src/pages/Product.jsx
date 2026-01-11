@@ -15,40 +15,23 @@ export default function Product() {
 
     const fallbackImg = `${import.meta.env.BASE_URL}products/placeholder1.png`;
 
-    // Build image list (gallery is truth; gallery[0] = hero)
+    // Build image list: main first, then gallery
     const images = useMemo(() => {
         if (!product) return [];
-
-        const legacyMain = (product.image || product.imageUrl || "").trim();
+        const main = product.image || product.imageUrl || "";
         const gallery = Array.isArray(product.gallery) ? product.gallery : [];
+        const raw = [main, ...gallery].filter(Boolean);
 
-        // hero should be the first gallery image if present, otherwise legacy main
-        const hero = (gallery[0] || legacyMain || "").trim();
-
-        // Build ordered list:
-        // hero first, then the rest of the gallery in order,
-        // but also include legacyMain if it's not already included.
-        const raw = [
-            hero,
-            ...gallery.slice(1),
-            legacyMain && legacyMain !== hero ? legacyMain : null,
-        ].filter(Boolean);
-
-        // de-dupe (keep order)
+        // de-dupe
         const seen = new Set();
         const out = [];
         for (const url of raw) {
-            if (!url) continue;
             if (seen.has(url)) continue;
             seen.add(url);
             out.push(url);
         }
-
         return out.length ? out : [fallbackImg];
     }, [product, fallbackImg]);
-
-
-
 
     const [activeIndex, setActiveIndex] = useState(0);
     const [lbOpen, setLbOpen] = useState(false);
@@ -130,7 +113,7 @@ export default function Product() {
                         >
                             <div className="product-heroFrame">
                                 <SafeImage
-                                    className="product-heroImg"
+                                    className="toy-img"
                                     src={heroSrc}
                                     fallbackSrc={fallbackImg}
                                     alt={product.name}

@@ -1,5 +1,6 @@
 // src/components/Lightbox.jsx
 import { useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import SafeImage from "./SafeImage";
 
 export default function Lightbox({
@@ -18,21 +19,17 @@ export default function Lightbox({
         return images[i];
     }, [images, index, hasImages]);
 
-    // Keyboard: ESC closes, arrows navigate
     useEffect(() => {
         if (!open) return;
-
         function onKey(e) {
             if (e.key === "Escape") onClose?.();
             if (e.key === "ArrowLeft") onPrev?.();
             if (e.key === "ArrowRight") onNext?.();
         }
-
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
     }, [open, onClose, onPrev, onNext]);
 
-    // Prevent background scroll
     useEffect(() => {
         if (!open) return;
         const prev = document.body.style.overflow;
@@ -42,7 +39,6 @@ export default function Lightbox({
         };
     }, [open]);
 
-    // Swipe support (mobile)
     const startX = useRef(null);
     const startY = useRef(null);
 
@@ -60,7 +56,6 @@ export default function Lightbox({
         const dx = t.clientX - (startX.current ?? t.clientX);
         const dy = t.clientY - (startY.current ?? t.clientY);
 
-        // only treat as swipe if mostly horizontal
         if (Math.abs(dx) < 50) return;
         if (Math.abs(dy) > Math.abs(dx) * 0.6) return;
 
@@ -70,13 +65,12 @@ export default function Lightbox({
 
     if (!open) return null;
 
-    return (
+    const modal = (
         <div
             className="lb-overlay"
             role="dialog"
             aria-modal="true"
             onMouseDown={(e) => {
-                // click outside closes
                 if (e.target === e.currentTarget) onClose?.();
             }}
             onTouchStart={onTouchStart}
@@ -103,4 +97,7 @@ export default function Lightbox({
             </div>
         </div>
     );
+
+    // ✅ This avoids "fixed inside transformed parent" nonsense
+    return createPortal(modal, document.body);
 }

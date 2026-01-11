@@ -783,16 +783,20 @@ body {
 }
 
 /* --- ToyCard: fade-in on load (SafeImage adds .is-loaded to img) --- */
-.toy-img {
-  opacity: 0;
-  transform: scale(0.98);
-  transition: opacity 280ms ease, transform 320ms ease;
+/* Instead of opacity: 0 */
+.toy-img,
+.product-img,
+.product-heroImg {
+  opacity: 0.85;              /* was 0 */
+  transform: scale(1);        /* stop scale jitter */
+  transition: opacity 180ms ease;  /* simpler */
 }
 
-.toy-img.is-loaded {
+.toy-img.is-loaded,
+.product-heroImg.is-loaded {
   opacity: 1;
-  transform: scale(1);
 }
+
 
 /* --- ToyCard: stop shimmer after load --- */
 .toy-imgWrap:has(img.is-loaded) .img-sheen {
@@ -801,6 +805,15 @@ body {
   transition: opacity 200ms ease;
   border-radius: inherit;
 }
+
+@media (hover: none) and (pointer: coarse) {
+  .img-sheen {
+    animation: none !important;
+    opacity: 0.25; /* still shows a soft placeholder */
+    transform: none !important;
+  }
+}
+
 
 /* Optional: keep a tiny hover zoom without fighting the card hover */
 .toy-card:hover .toy-img.is-loaded {
@@ -1115,7 +1128,7 @@ html, body {
   inset: 0;
   background: rgba(0,0,0,0.72);
   backdrop-filter: blur(10px);
-  z-index: 9999;
+z-index: 100000; /* belt + suspenders */
   display: grid;
   place-items: center;
   padding: 16px;
@@ -1123,40 +1136,34 @@ html, body {
 
 .lb-shell{
   position: relative;
-
-  /* smaller stage = less “zoom” */
   width: min(92vw, 980px);
-  height: min(78vh, 560px);
-
+  height: min(72vh, 540px);
   background: rgba(10,10,15,0.92);
   border-radius: 18px;
   box-shadow: 0 30px 80px rgba(0,0,0,0.6);
 
+  /* THIS is the important part */
   display: grid;
+  grid-template-rows: 1fr;  /* no weird auto rows */
   place-items: center;
 
-  /* gives breathing room */
   padding: 22px;
 }
 
 .lb-stage{
   width: 100%;
   height: 100%;
-
-  place-items: center;
-
-  /* extra safety so nothing can “fill” weirdly */
+  place-items: center;    /* now it actually works */
   overflow: hidden;
+  position: relative;
 }
 
 
 .lb-img{
   max-width: 100%;
   max-height: 100%;
-
   width: auto;
   height: auto;
-
   object-fit: contain;
   display: block;
 }
@@ -1173,6 +1180,11 @@ html, body {
   color: rgba(255,255,255,0.92);
   font-size: 18px;
   cursor: pointer;
+}
+
+.lb-close,
+.lb-nav{
+  z-index: 100001;
 }
 
 .lb-nav{
@@ -1207,6 +1219,7 @@ html, body {
   background: rgba(0,0,0,0.35);
   border: 1px solid rgba(255,255,255,0.14);
 }
+
 
 
 /* =========================
@@ -1532,6 +1545,31 @@ html, body {
   margin-bottom: 6px;
 }
 
+/* ===== Anti-flicker for mobile ===== */
+@media (hover: none) and (pointer: coarse) {
+  .img-sheen {
+    animation: none !important;
+    transform: none !important;
+    opacity: 0.25 !important;
+  }
+
+  .hero { animation: none !important; }
+}
+
+/* Reduce load jitter: don't fade from 0 */
+.toy-img,
+.product-img,
+.product-heroImg {
+  opacity: 0.85;
+  transform: none;
+  transition: opacity 180ms ease;
+}
+
+.toy-img.is-loaded,
+.product-img.is-loaded,
+.product-heroImg.is-loaded {
+  opacity: 1;
+}
 
 
 
