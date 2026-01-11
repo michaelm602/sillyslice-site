@@ -2,21 +2,56 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
+    <!-- Favicons -->
     <link
-  rel="icon"
-  type="image/png"
-  href="/favicon-dark.png"
-  media="(prefers-color-scheme: dark)"
-/>
-<link
-  rel="icon"
-  type="image/png"
-  href="/favicon-light.png"
-  media="(prefers-color-scheme: light)"
-/>
+      rel="icon"
+      type="image/png"
+      href="/favicon-dark.png"
+      media="(prefers-color-scheme: dark)"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="/favicon-light.png"
+      media="(prefers-color-scheme: light)"
+    />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+
     <title>sillyslice</title>
+
+    <!-- 🔥 FIRST-PAINT DARK THEME (prevents dark flicker) -->
+    <style>
+      :root {
+        --bg: #070b14;
+        --text: rgba(255,255,255,0.92);
+        --panel: rgba(255,255,255,0.06);
+        --border: rgba(255,255,255,0.14);
+      }
+
+      html, body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      /* match your cards so they don't "pop" later */
+      .card,
+      .card-soft {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+      }
+    </style>
+    <!-- 🔥 END FIRST-PAINT FIX -->
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

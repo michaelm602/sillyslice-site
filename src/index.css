@@ -1277,6 +1277,20 @@ html, body {
   /* Keep blur, but DON'T animate it */
   backdrop-filter: blur(14px);
 
+  /* Example: whatever class uses blur */
+.navbar, .drawer, .glass {
+  background: rgba(10, 14, 24, 0.78);
+}
+
+/* Only apply blur if supported */
+@supports ((-webkit-backdrop-filter: blur(10px)) or (backdrop-filter: blur(10px))) {
+  .glass, .navbar, .drawer {
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+}
+
+
   /* GPU-friendly slide */
   transform: translate3d(110%, 0, 0);
   transition: transform 240ms ease;
