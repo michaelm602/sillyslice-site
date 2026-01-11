@@ -46,7 +46,7 @@ export default function Home() {
                     src={`${base}logo-hero.png`}
                     alt={site.brandName}
                     style={{
-                        width: "clamp(140px, 14vw, 190px)",
+                        width: "clamp(180px, 20vw, 280px)",
                         height: "auto",
                         display: "block",
                         margin: 0,
