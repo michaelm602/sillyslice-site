@@ -1,5 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 
+function resolvePublic(u) {
+    if (!u) return u;
+
+    // If it's an absolute URL (http, https, blob, data), leave it alone
+    if (/^(https?:|blob:|data:)/i.test(u)) return u;
+
+    // If it starts with "/", it's a root path. On GH Pages that breaks.
+    // Convert "/x.jpg" -> `${BASE_URL}x.jpg`
+    if (u.startsWith("/")) {
+        const base = import.meta.env.BASE_URL || "/";
+        return `${base}${u.slice(1)}`;
+    }
+
+    // "placeholder.jpg" (relative) is fine as-is
+    return u;
+}
+
 export default function SafeImage({
     src,
     alt = "",
@@ -9,29 +26,29 @@ export default function SafeImage({
 }) {
     const imgRef = useRef(null);
     const [loaded, setLoaded] = useState(false);
-    const [currentSrc, setCurrentSrc] = useState(src);
+    const [currentSrc, setCurrentSrc] = useState(resolvePublic(src));
 
     // ✅ Smart src change: if cached, mark loaded immediately (no flicker)
     useEffect(() => {
         if (!src) return;
 
+        const resolved = resolvePublic(src);
+
         // If it's the same src, don't thrash state
-        setCurrentSrc((prev) => (prev === src ? prev : src));
+        setCurrentSrc((prev) => (prev === resolved ? prev : resolved));
 
         let cancelled = false;
 
         const probe = new Image();
-        probe.src = src;
+        probe.src = resolved;
 
         if (probe.complete && probe.naturalWidth > 0) {
-            // cached: go straight to loaded (skip shimmer/opacity dip)
             if (!cancelled) setLoaded(true);
             return () => {
                 cancelled = true;
             };
         }
 
-        // not cached: show shimmer until it loads
         setLoaded(false);
 
         return () => {
@@ -59,8 +76,10 @@ export default function SafeImage({
             className={`${className} ${loaded ? "is-loaded" : ""}`}
             onLoad={() => setLoaded(true)}
             onError={() => {
-                if (fallbackSrc && currentSrc !== fallbackSrc) {
-                    setCurrentSrc(fallbackSrc);
+                const resolvedFallback = resolvePublic(fallbackSrc);
+
+                if (resolvedFallback && currentSrc !== resolvedFallback) {
+                    setCurrentSrc(resolvedFallback);
                 }
             }}
             {...props}
