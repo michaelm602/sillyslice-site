@@ -2,19 +2,14 @@ import { useEffect, useRef, useState } from "react";
 
 function resolvePublic(u) {
     if (!u) return u;
-
-    // If it's an absolute URL (http, https, blob, data), leave it alone
     if (/^(https?:|blob:|data:)/i.test(u)) return u;
 
-    // If it starts with "/", it's a root path. On GH Pages that breaks.
-    // Convert "/x.jpg" -> `${BASE_URL}x.jpg`
-    if (u.startsWith("/")) {
-        const base = import.meta.env.BASE_URL || "/";
-        return `${base}${u.slice(1)}`;
-    }
+    const base = import.meta.env.BASE_URL || "/";
 
-    // "placeholder.jpg" (relative) is fine as-is
-    return u;
+    if (u.startsWith(base)) return u;
+    if (u.startsWith("/")) return `${base}${u.slice(1)}`;
+
+    return `${base}${u}`;
 }
 
 export default function SafeImage({
@@ -28,13 +23,12 @@ export default function SafeImage({
     const [loaded, setLoaded] = useState(false);
     const [currentSrc, setCurrentSrc] = useState(resolvePublic(src));
 
-    // ✅ Smart src change: if cached, mark loaded immediately (no flicker)
+    // 🔄 Handle src changes (cached images skip shimmer)
     useEffect(() => {
         if (!src) return;
 
         const resolved = resolvePublic(src);
 
-        // If it's the same src, don't thrash state
         setCurrentSrc((prev) => (prev === resolved ? prev : resolved));
 
         let cancelled = false;
@@ -56,7 +50,7 @@ export default function SafeImage({
         };
     }, [src]);
 
-    // ✅ When the DOM img is already complete (some browsers), sync loaded
+    // 🔁 Sync if browser already has it
     useEffect(() => {
         const img = imgRef.current;
         if (!img) return;
@@ -77,7 +71,6 @@ export default function SafeImage({
             onLoad={() => setLoaded(true)}
             onError={() => {
                 const resolvedFallback = resolvePublic(fallbackSrc);
-
                 if (resolvedFallback && currentSrc !== resolvedFallback) {
                     setCurrentSrc(resolvedFallback);
                 }
