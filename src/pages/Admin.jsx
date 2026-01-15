@@ -10,7 +10,7 @@ import { products as localProducts, categories } from "../data/products";
 import { useNavigate } from "react-router-dom";
 import { uploadProductImage } from "../utils/uploadImage";
 import { deleteStorageImage } from "../utils/deleteImage";
-
+import { getProductVisibility } from "../utils/productVisibility";
 
 const LS_KEY = "sillyslice_admin_ui";
 
@@ -60,7 +60,11 @@ export default function Admin() {
         seedFromLocal,
         saveDraft,
         publishDraft,
+        discardDraft,
+        deleteProductDoc,
         refresh,
+        createProduct,
+        duplicateProduct,
     } = useAdminProducts();
 
     // If stored selectedId doesn’t exist anymore, clear it
@@ -94,7 +98,7 @@ export default function Admin() {
             image: (selected.image ?? "").trim(),
             gallery: Array.isArray(selected.gallery) ? selected.gallery.filter(Boolean) : [],
 
-            // ✅ add these
+            // storage path tracking (for delete reliability)
             imagePath: selected.imagePath ?? null,
             galleryPaths:
                 selected.galleryPaths && typeof selected.galleryPaths === "object"
@@ -102,20 +106,18 @@ export default function Admin() {
                     : {},
         };
 
-
         const draft =
             selected.draft && typeof selected.draft === "object" ? selected.draft : null;
 
         const merged = view === "draft" && draft ? { ...base, ...draft } : base;
 
-        // ✅ normalize AFTER merge so draft can't nuke it
-        // ✅ normalize AFTER merge so draft can't nuke it
+        // normalize AFTER merge so draft can't nuke it
         const g = Array.isArray(merged.gallery) ? merged.gallery.filter(Boolean) : [];
         const legacyMain = (merged.image ?? "").trim();
         const hero = (g[0] || legacyMain).trim();
         const normalizedGallery = hero ? [hero, ...g.filter((u) => u !== hero)] : g;
 
-        // ✅ paths: take from merged (draft overrides base when view=draft)
+        // paths: take from merged (draft overrides base when view=draft)
         const mergedGalleryPaths =
             merged.galleryPaths && typeof merged.galleryPaths === "object"
                 ? merged.galleryPaths
@@ -129,15 +131,10 @@ export default function Admin() {
             ...merged,
             image: hero,
             gallery: normalizedGallery,
-
-            // ✅ keep these consistent
             galleryPaths: mergedGalleryPaths,
             imagePath: nextImagePath,
         };
-
-
     }, [selected, view]);
-
 
     const [form, setForm] = useState(null);
 
@@ -155,24 +152,61 @@ export default function Admin() {
         return next;
     }
 
+    function uniq(arr) {
+        return Array.from(new Set((arr || []).filter(Boolean)));
+    }
 
+    function collectAllImagePaths(product) {
+        if (!product) return [];
+
+        const paths = [];
+
+        // published
+        if (product.imagePath) paths.push(product.imagePath);
+        if (product.galleryPaths && typeof product.galleryPaths === "object") {
+            paths.push(...Object.values(product.galleryPaths));
+        }
+
+        // draft
+        const d = product.draft;
+        if (d && typeof d === "object") {
+            if (d.imagePath) paths.push(d.imagePath);
+            if (d.galleryPaths && typeof d.galleryPaths === "object") {
+                paths.push(...Object.values(d.galleryPaths));
+            }
+        }
+
+        return uniq(paths);
+    }
+
+
+    // ✅ FIXED: no using vars before they exist
     async function applyGalleryOrder(nextGallery) {
         if (!selected) return;
 
         const cleaned = Array.isArray(nextGallery) ? nextGallery.filter(Boolean) : [];
         const hero = (cleaned[0] || "").trim();
 
-        const next = { ...(form || {}), gallery: cleaned, image: hero, galleryPaths, imagePath: nextImagePath };
-        setForm(next);
-
-
-        // Save immediately so order sticks
         const galleryPaths =
-            (selected?.draft && typeof selected.draft.galleryPaths === "object" && selected.draft.galleryPaths) ||
-            (form?.galleryPaths && typeof form.galleryPaths === "object" ? form.galleryPaths : {}) ||
+            (selected?.draft &&
+                typeof selected.draft.galleryPaths === "object" &&
+                selected.draft.galleryPaths) ||
+            (form?.galleryPaths && typeof form.galleryPaths === "object"
+                ? form.galleryPaths
+                : {}) ||
             {};
 
-        const nextImagePath = hero ? (galleryPaths[hero] || form.imagePath || null) : null;
+        const nextImagePath = hero ? (galleryPaths[hero] || form?.imagePath || null) : null;
+
+        const next = {
+            ...(form || {}),
+            gallery: cleaned,
+            image: hero,
+            galleryPaths,
+            imagePath: nextImagePath,
+        };
+
+        setForm(next);
 
         await saveDraft(selected.id, {
             ...(selected.draft || {}),
@@ -181,10 +215,7 @@ export default function Admin() {
             galleryPaths,
             imagePath: nextImagePath,
         });
-
     }
-
-
 
     async function seedSiteContent() {
         await setDoc(doc(db, "siteContent", "main"), localSiteContent, { merge: false });
@@ -206,8 +237,7 @@ export default function Admin() {
 
         const gallery = Array.isArray(form.gallery) ? form.gallery.filter(Boolean) : [];
         const hero = (gallery[0] || form.image || "").trim();
-        const finalGallery = hero ? [hero, ...gallery.filter(u => u !== hero)] : gallery;
-
+        const finalGallery = hero ? [hero, ...gallery.filter((u) => u !== hero)] : gallery;
 
         await saveDraft(selected.id, {
             name: form.name,
@@ -223,6 +253,11 @@ export default function Admin() {
             // keep hero synced with gallery[0]
             image: hero,
             gallery: finalGallery,
+
+            // keep path maps if present
+            imagePath: form.imagePath ?? null,
+            galleryPaths:
+                form.galleryPaths && typeof form.galleryPaths === "object" ? form.galleryPaths : {},
         });
 
         alert("Saved draft");
@@ -233,6 +268,7 @@ export default function Admin() {
         if (!selected) return;
         await publishDraft(selected.id);
         alert("Published draft");
+        await refresh();
     }
 
     async function onUploadMainImage(file) {
@@ -247,7 +283,6 @@ export default function Admin() {
         const currentGallery = Array.isArray(form?.gallery) ? form.gallery.filter(Boolean) : [];
         const nextGallery = [url, ...currentGallery.filter((u) => u !== url)];
 
-        // keep a URL->path map for reliable deletion
         const currentPaths =
             (selected?.draft && typeof selected.draft.galleryPaths === "object" && selected.draft.galleryPaths) ||
             (form?.galleryPaths && typeof form.galleryPaths === "object" ? form.galleryPaths : {}) ||
@@ -275,18 +310,13 @@ export default function Admin() {
         await refresh();
     }
 
-
-
-
     async function onUploadGalleryImages(fileList) {
         if (!selected || !fileList || fileList.length === 0) return;
 
         const files = Array.from(fileList);
 
         const uploaded = await Promise.all(
-            files.map((file) =>
-                uploadProductImage({ file, productId: selected.id, kind: "gallery" })
-            )
+            files.map((file) => uploadProductImage({ file, productId: selected.id, kind: "gallery" }))
         );
 
         const newUrls = uploaded.map((u) => u.url);
@@ -310,11 +340,8 @@ export default function Admin() {
             nextGalleryPaths[url] = path;
         }
 
-        // if hero is the newly uploaded image, keep imagePath in sync too
         const nextImagePath =
-            hero === form.image
-                ? (form.imagePath || null)
-                : (nextGalleryPaths[hero] || form.imagePath || null);
+            hero === form.image ? (form.imagePath || null) : (nextGalleryPaths[hero] || form.imagePath || null);
 
         const next = {
             ...(form || {}),
@@ -342,7 +369,6 @@ export default function Admin() {
         const ok = window.confirm("Delete this image forever? No undo.");
         if (!ok) return;
 
-        // find path from draft map (best) or fallback to parsing url
         const galleryPaths =
             (selected?.draft && typeof selected.draft.galleryPaths === "object" && selected.draft.galleryPaths) ||
             (form?.galleryPaths && typeof form.galleryPaths === "object" ? form.galleryPaths : {}) ||
@@ -388,14 +414,9 @@ export default function Admin() {
         } catch (err) {
             console.error(err);
             alert(err.message || "Delete failed");
-            await refresh(); // resync in case optimistic UI got out of whack
+            await refresh();
         }
     }
-
-
-
-
-
 
     return (
         <div className="card" style={{ padding: 24, display: "grid", gap: 16 }}>
@@ -458,8 +479,42 @@ export default function Admin() {
                             Seed Products (missing only)
                         </button>
 
-                        <button className="btn" onClick={refresh} disabled={productsLoading}>
+                        <button
+                            className="btn"
+                            onClick={refresh}
+                            disabled={productsLoading}
+                        >
                             {productsLoading ? "Refreshing…" : "Refresh"}
+                        </button>
+
+                        {/* ✅ NEW PRODUCT */}
+                        <button
+                            className="btn btn-primary"
+                            onClick={async () => {
+                                const id = await createProduct();
+                                setSelectedId(id);
+                                setView("draft");
+                            }}
+                            disabled={productsLoading}
+                        >
+                            + New Product
+                        </button>
+
+                        {/* ✅ DUPLICATE */}
+                        <button
+                            className="btn"
+                            onClick={async () => {
+                                if (!selected || !form) return;
+
+                                const source = view === "draft" ? form : selected;
+                                const newId = await duplicateProduct(source);
+
+                                setSelectedId(newId);
+                                setView("draft");
+                            }}
+                            disabled={!selected || !form || productsLoading}
+                        >
+                            Duplicate
                         </button>
 
                         <div style={{ opacity: 0.8 }}>
@@ -467,6 +522,7 @@ export default function Admin() {
                             {!isDev ? " (PROD mode)" : " (DEV mode)"}
                         </div>
                     </div>
+
 
                     <div className="admin-shell">
                         {/* Left list */}
@@ -480,11 +536,7 @@ export default function Admin() {
                                     const source =
                                         p.draft && typeof p.draft === "object" ? { ...p, ...p.draft } : p;
 
-                                    const hero =
-                                        source.image || (Array.isArray(source.gallery) ? source.gallery[0] : "") || "";
-
-                                    const hasImage = typeof hero === "string" && hero.trim() !== "";
-                                    const isActive = source.active !== false;
+                                    const vis = getProductVisibility(source);
 
                                     return (
                                         <button
@@ -497,7 +549,7 @@ export default function Admin() {
                                             style={{
                                                 textAlign: "left",
                                                 border: isSelected ? "1px solid rgba(255,255,255,0.4)" : undefined,
-                                                opacity: isActive ? 1 : 0.6,
+                                                opacity: source.active !== false ? 1 : 0.6,
                                                 display: "grid",
                                                 gap: 2,
                                             }}
@@ -505,14 +557,14 @@ export default function Admin() {
                                         >
                                             <div style={{ fontWeight: 800 }}>{source.name || p.id}</div>
                                             <div style={{ fontSize: 12, opacity: 0.8 }}>
-                                                {source.category || "—"} • {hasImage ? "image ✅" : "no image ⚠️"} •{" "}
-                                                {isActive ? "active" : "inactive"}
+                                                {source.category || "—"} •{" "}
+                                                {vis.visible ? "VISIBLE ✅" : `HIDDEN ⚠️ (${vis.issues[0]})`} •{" "}
+                                                {source.active !== false ? "active" : "inactive"}
                                                 {p.draft ? " • draft ✍️" : ""}
                                             </div>
                                         </button>
                                     );
                                 })}
-
                             </div>
                         </div>
 
@@ -548,6 +600,31 @@ export default function Admin() {
                                         </div>
                                     </div>
 
+                                    {/* ✅ Shop visibility checklist */}
+                                    {(() => {
+                                        const vis = getProductVisibility(form);
+                                        return (
+                                            <div className="card-soft" style={{ padding: 12, borderRadius: 14 }}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                                                    <div style={{ fontWeight: 900 }}>Shop Visibility</div>
+                                                    <div style={{ fontWeight: 900 }}>{vis.visible ? "VISIBLE ✅" : "HIDDEN ⚠️"}</div>
+                                                </div>
+
+                                                {vis.visible ? (
+                                                    <div style={{ marginTop: 6, fontSize: 13, opacity: 0.8 }}>
+                                                        Meets requirements to show in Shop.
+                                                    </div>
+                                                ) : (
+                                                    <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 18, fontSize: 13, opacity: 0.85 }}>
+                                                        {vis.issues.map((x) => (
+                                                            <li key={x}>{x}</li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
+
                                     {/* Main image upload */}
                                     <div style={{ display: "grid", gap: 8 }}>
                                         <div style={{ fontWeight: 800 }}>Main image</div>
@@ -566,6 +643,7 @@ export default function Admin() {
                                                 Upload saves to <strong>draft</strong>. Publish when it looks right.
                                             </div>
                                         </div>
+
                                         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
                                             <button
                                                 className="btn"
@@ -592,12 +670,11 @@ export default function Admin() {
                                                     border: "1px solid rgba(255,255,255,0.14)",
                                                 }}
                                             />
-
-
                                         ) : (
                                             <div style={{ opacity: 0.7 }}>No image yet.</div>
                                         )}
                                     </div>
+
                                     {/* Gallery images */}
                                     <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
                                         <div style={{ fontWeight: 800 }}>Gallery images</div>
@@ -665,14 +742,11 @@ export default function Admin() {
                                                                     const nextGallery = [url, ...form.gallery.filter((u) => u !== url)];
                                                                     await applyGalleryOrder(nextGallery);
                                                                 }}
-                                                                style={{
-                                                                    padding: "6px 8px",
-                                                                    fontSize: 12,
-                                                                    borderRadius: 10,
-                                                                }}
+                                                                style={{ padding: "6px 8px", fontSize: 12, borderRadius: 10 }}
                                                             >
                                                                 Make hero
                                                             </button>
+
                                                             <button
                                                                 className="btn"
                                                                 type="button"
@@ -689,13 +763,11 @@ export default function Admin() {
                                                         </div>
                                                     );
                                                 })}
-
                                             </div>
                                         ) : (
                                             <div style={{ opacity: 0.7 }}>No gallery images yet.</div>
                                         )}
                                     </div>
-
 
                                     {/* Form fields */}
                                     <div style={{ display: "grid", gap: 10 }}>
@@ -803,10 +875,91 @@ export default function Admin() {
                                         <button className="btn btn-primary" onClick={onSaveDraft}>
                                             Save draft
                                         </button>
+                                        <button
+                                            className="btn"
+                                            onClick={async () => {
+                                                if (!selected?.id) return;
 
-                                        <button className="btn" onClick={onPublish} disabled={!selected?.draft}>
-                                            Publish draft
+                                                const ok = window.confirm("Discard draft changes and revert to published? No undo.");
+                                                if (!ok) return;
+
+                                                await discardDraft(selected.id);
+
+                                                // after discard, keep UI aligned
+                                                setView("published");
+                                            }}
+                                            disabled={!selected?.draft}
+                                            title={!selected?.draft ? "No draft to discard" : "Throw away draft changes"}
+                                        >
+                                            Discard draft
                                         </button>
+
+
+                                        {/* ✅ Publish guarded by visibility */}
+                                        {(() => {
+                                            const draftSource =
+                                                selected?.draft && typeof selected.draft === "object"
+                                                    ? { ...selected, ...selected.draft }
+                                                    : null;
+
+                                            const draftVis = draftSource ? getProductVisibility(draftSource) : null;
+
+                                            const disabled = !selected?.draft || !(draftVis && draftVis.visible);
+
+                                            const title = !selected?.draft
+                                                ? "No draft to publish"
+                                                : !draftVis?.visible
+                                                    ? "Fix shop visibility issues before publishing"
+                                                    : "Publish draft";
+
+                                            return (
+                                                <button className="btn" onClick={onPublish} disabled={disabled} title={title}>
+                                                    Publish draft
+                                                </button>
+                                            );
+                                        })()}
+
+                                        <button
+                                            className="btn"
+                                            onClick={async () => {
+                                                if (!selected) return;
+
+                                                const name = selected.name || selected.id;
+
+                                                const ok = window.prompt(
+                                                    `Type DELETE to permanently remove "${name}" (product + images).`,
+                                                    ""
+                                                );
+
+                                                if (ok !== "DELETE") return;
+
+                                                try {
+                                                    // 1) delete all known storage images
+                                                    const paths = collectAllImagePaths(selected);
+                                                    for (const path of paths) {
+                                                        await deleteStorageImage({ path });
+                                                    }
+
+                                                    // 2) delete firestore doc
+                                                    await deleteProductDoc(selected.id);
+
+                                                    // 3) reset UI
+                                                    setSelectedId("");
+                                                    setView("draft");
+
+                                                    alert("Product deleted.");
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    alert(err.message || "Delete failed");
+                                                    await refresh();
+                                                }
+                                            }}
+                                            style={{ border: "1px solid rgba(255,80,120,0.6)" }}
+                                            title="Permanent delete (no undo)"
+                                        >
+                                            Delete product
+                                        </button>
+
 
                                         {selected?.draft ? (
                                             <div style={{ fontSize: 12, opacity: 0.8, alignSelf: "center" }}>
@@ -817,10 +970,6 @@ export default function Admin() {
                                                 No draft yet.
                                             </div>
                                         )}
-                                    </div>
-
-                                    <div style={{ fontSize: 12, opacity: 0.7 }}>
-                                        Shop visibility rule: <strong>active + image</strong>. Upload + publish to make it show.
                                     </div>
                                 </div>
                             )}

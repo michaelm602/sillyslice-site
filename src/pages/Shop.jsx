@@ -1,7 +1,9 @@
+// src/pages/Shop.jsx
 import { useMemo, useState } from "react";
 import useProducts from "../hooks/useProducts";
 import { categories } from "../data/products";
 import ToyCard from "../components/ToyCard";
+import { getProductVisibility } from "../utils/productVisibility";
 
 export default function Shop() {
     const [cat, setCat] = useState("all");
@@ -10,8 +12,13 @@ export default function Shop() {
     const { shopProducts, loading, source } = useProducts();
 
     const filtered = useMemo(() => {
-        if (cat === "all") return shopProducts;
-        return shopProducts.filter((p) => p.category === cat);
+        // enforce visibility at the page level too (belt + suspenders)
+        const visible = (shopProducts || []).filter(
+            (p) => getProductVisibility(p).visible
+        );
+
+        if (cat === "all") return visible;
+        return visible.filter((p) => p.category === cat);
     }, [cat, shopProducts]);
 
     const categoryOptions = useMemo(() => {
@@ -59,14 +66,16 @@ export default function Shop() {
             <section className="card-soft" style={{ padding: 18 }}>
                 {loading ? null : filtered.length === 0 ? (
                     <div style={{ padding: 10, opacity: 0.85 }}>
-                        <div style={{ fontWeight: 800, marginBottom: 6 }}>No products yet</div>
+                        <div style={{ fontWeight: 800, marginBottom: 6 }}>
+                            No products yet
+                        </div>
                         <div>We’re adding inventory right now. Swing back soon.</div>
 
                         {isDev && source === "local" ? (
                             <div style={{ marginTop: 10, fontSize: 13, opacity: 0.8 }}>
-                                DEV note: You’re seeing local fallback disabled in the shop list because we’re
-                                showing only “published-ish” items (active + image). Seed Firestore and upload
-                                real images to see them here.
+                                DEV note: You’re seeing local fallback disabled in the shop list
+                                because we’re showing only visible items. Seed Firestore and
+                                upload real images to see them here.
                             </div>
                         ) : null}
                     </div>

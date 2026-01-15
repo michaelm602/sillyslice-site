@@ -10,6 +10,12 @@ import {
     deleteField,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { PRODUCT_DEFAULTS } from "../data/products";
+import { deleteDoc } from "firebase/firestore";
+
+function makeNewId(prefix = "prod") {
+    return `${prefix}-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString(36)}`;
+}
 
 export default function useAdminProducts() {
     const [items, setItems] = useState([]);
@@ -21,13 +27,13 @@ export default function useAdminProducts() {
             const snap = await getDocs(collection(db, "products"));
             const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
+            // keep your current sort behavior
             list.sort((a, b) => (a.featuredRank ?? 999) - (b.featuredRank ?? 999));
             setItems(list);
         } finally {
             setLoading(false);
         }
     }, []);
-
 
     useEffect(() => {
         let alive = true;
@@ -37,7 +43,6 @@ export default function useAdminProducts() {
                 if (!alive) return;
                 await refresh();
             } catch (e) {
-                // optional: you can add an error state if you want
                 if (!alive) return;
                 setItems([]);
                 setLoading(false);
@@ -83,28 +88,124 @@ export default function useAdminProducts() {
         await refresh();
     }
 
-
-
     async function publishDraft(productId) {
         const current = items.find((p) => p.id === productId);
         const draft = current?.draft;
         if (!draft) return;
 
-        // Only promote these if they exist in draft, otherwise keep published as-is.
+        // promote draft fields to root, delete draft
         const patch = {
             ...draft,
             draft: deleteField(),
             updatedAt: serverTimestamp(),
         };
 
+        // preserve your explicit path fields behavior
         if (draft.imagePath !== undefined) patch.imagePath = draft.imagePath;
         if (draft.galleryPaths !== undefined) patch.galleryPaths = draft.galleryPaths;
 
         await updateDoc(doc(db, "products", productId), patch);
+        await refresh();
+    }
+
+    async function discardDraft(productId) {
+        await updateDoc(doc(db, "products", productId), {
+            draft: deleteField(),
+            updatedAt: serverTimestamp(),
+        });
 
         await refresh();
     }
 
+    async function deleteProductDoc(productId) {
+        await deleteDoc(doc(db, "products", productId));
+        await refresh();
+    }
 
-    return { items, loading, refresh, seedFromLocal, saveDraft, publishDraft };
+
+
+    // ✅ NEW: create a draft-safe product (hidden by default)
+    async function createProduct() {
+        const id = makeNewId("prod");
+
+        const base = {
+            ...PRODUCT_DEFAULTS,
+            id,
+            name: "Untitled",
+            price: 0,
+            image: "",
+            gallery: [],
+            active: false, // IMPORTANT: starts hidden until ready
+            featuredRank: null,
+
+            // stock defaults (keeps it hidden by our visibility rules)
+            qty: 0,
+            leadDays: null,
+
+            // storage path maps
+            imagePath: null,
+            galleryPaths: {},
+
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        };
+
+        await setDoc(doc(db, "products", id), base, { merge: false });
+        await refresh();
+        return id;
+    }
+
+    // ✅ NEW: duplicate a product (copy current effective fields into new doc)
+    async function duplicateProduct(sourceProduct) {
+        if (!sourceProduct) throw new Error("No source product provided");
+
+        const id = makeNewId("prod");
+
+        // sanitize + copy only known fields so we don’t accidentally drag junk along
+        const copy = {
+            ...PRODUCT_DEFAULTS,
+
+            id,
+            name: sourceProduct.name ? `${sourceProduct.name} (Copy)` : "Untitled (Copy)",
+            price: Number(sourceProduct.price) || 0,
+            category: sourceProduct.category || "fidget",
+            fulfillment: sourceProduct.fulfillment || "ready",
+            leadDays: sourceProduct.leadDays ?? null,
+            qty: sourceProduct.qty ?? null,
+            description: sourceProduct.description || "",
+
+            image: (sourceProduct.image || "").trim(),
+            gallery: Array.isArray(sourceProduct.gallery) ? sourceProduct.gallery.filter(Boolean) : [],
+
+            imagePath: sourceProduct.imagePath ?? null,
+            galleryPaths:
+                sourceProduct.galleryPaths && typeof sourceProduct.galleryPaths === "object"
+                    ? sourceProduct.galleryPaths
+                    : {},
+
+            // IMPORTANT: duplicate starts hidden
+            active: false,
+            featuredRank: null,
+
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        };
+
+        await setDoc(doc(db, "products", id), copy, { merge: false });
+        await refresh();
+        return id;
+    }
+
+    return {
+        items,
+        loading,
+        refresh,
+        seedFromLocal,
+        saveDraft,
+        publishDraft,
+        discardDraft,
+        createProduct,
+        duplicateProduct,
+        deleteProductDoc, // ✅ NEW
+    };
 }
