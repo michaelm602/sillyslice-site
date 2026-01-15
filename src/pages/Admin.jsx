@@ -37,6 +37,23 @@ function toNumberOrNull(v) {
     return Number.isFinite(n) ? n : null;
 }
 
+// anywhere in Admin.jsx (top-level helper)
+function normalizeUrl(u) {
+    if (!u) return "";
+    // fix leading slash paths that break GH Pages
+    if (u.startsWith("/products/")) {
+        return `${import.meta.env.BASE_URL}${u.slice(1)}`;
+    }
+    return u;
+}
+
+function normalizeProductMedia(p) {
+    const image = normalizeUrl(p.image);
+    const gallery = Array.isArray(p.gallery) ? p.gallery.map(normalizeUrl) : [];
+    return { ...p, image, gallery };
+}
+
+
 export default function Admin() {
     const navigate = useNavigate();
 
@@ -239,6 +256,12 @@ export default function Admin() {
         const hero = (gallery[0] || form.image || "").trim();
         const finalGallery = hero ? [hero, ...gallery.filter((u) => u !== hero)] : gallery;
 
+        // ✅ normalize media URLs so /products/* becomes BASE_URL/products/*
+        const normalized = normalizeProductMedia({
+            image: hero,
+            gallery: finalGallery,
+        });
+
         await saveDraft(selected.id, {
             name: form.name,
             price: Number(form.price) || 0,
@@ -250,19 +273,22 @@ export default function Admin() {
             featuredRank: toNumberOrNull(form.featuredRank),
             active: !!form.active,
 
-            // keep hero synced with gallery[0]
-            image: hero,
-            gallery: finalGallery,
+            // ✅ use normalized values
+            image: normalized.image,
+            gallery: normalized.gallery,
 
             // keep path maps if present
             imagePath: form.imagePath ?? null,
             galleryPaths:
-                form.galleryPaths && typeof form.galleryPaths === "object" ? form.galleryPaths : {},
+                form.galleryPaths && typeof form.galleryPaths === "object"
+                    ? form.galleryPaths
+                    : {},
         });
 
         alert("Saved draft");
         await refresh();
     }
+
 
     async function onPublish() {
         if (!selected) return;
@@ -507,11 +533,20 @@ export default function Admin() {
                                 if (!selected || !form) return;
 
                                 const source = view === "draft" ? form : selected;
-                                const newId = await duplicateProduct(source);
+
+                                // ✅ sanitize media URLs before duplicating
+                                const cleaned = normalizeProductMedia({
+                                    ...source,
+                                    // optional: start duplicates hidden until Audrey uploads real media
+                                    active: false,
+                                });
+
+                                const newId = await duplicateProduct(cleaned);
 
                                 setSelectedId(newId);
                                 setView("draft");
                             }}
+
                             disabled={!selected || !form || productsLoading}
                         >
                             Duplicate

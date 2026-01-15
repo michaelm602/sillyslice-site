@@ -156,12 +156,12 @@ export default function useAdminProducts() {
     }
 
     // ✅ NEW: duplicate a product (copy current effective fields into new doc)
+    // ✅ NEW: duplicate a product (copy details, reset media to force fresh uploads)
     async function duplicateProduct(sourceProduct) {
         if (!sourceProduct) throw new Error("No source product provided");
 
         const id = makeNewId("prod");
 
-        // sanitize + copy only known fields so we don’t accidentally drag junk along
         const copy = {
             ...PRODUCT_DEFAULTS,
 
@@ -174,14 +174,11 @@ export default function useAdminProducts() {
             qty: sourceProduct.qty ?? null,
             description: sourceProduct.description || "",
 
-            image: (sourceProduct.image || "").trim(),
-            gallery: Array.isArray(sourceProduct.gallery) ? sourceProduct.gallery.filter(Boolean) : [],
-
-            imagePath: sourceProduct.imagePath ?? null,
-            galleryPaths:
-                sourceProduct.galleryPaths && typeof sourceProduct.galleryPaths === "object"
-                    ? sourceProduct.galleryPaths
-                    : {},
+            // ✅ reset media so we don’t clone broken placeholders or shared images
+            image: "",
+            gallery: [],
+            imagePath: null,
+            galleryPaths: {},
 
             // IMPORTANT: duplicate starts hidden
             active: false,
@@ -195,6 +192,7 @@ export default function useAdminProducts() {
         await refresh();
         return id;
     }
+
 
     return {
         items,
