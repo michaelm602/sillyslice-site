@@ -37,6 +37,16 @@ function toNumberOrNull(v) {
     return Number.isFinite(n) ? n : null;
 }
 
+const fallbackImg = `${import.meta.env.BASE_URL}products/placeholder1.png`;
+
+function imgFallback(e) {
+    // prevent infinite loops
+    if (e.currentTarget.dataset.fallbackApplied) return;
+    e.currentTarget.dataset.fallbackApplied = "1";
+    e.currentTarget.src = fallbackImg;
+}
+
+
 // anywhere in Admin.jsx (top-level helper)
 function normalizeUrl(u) {
     if (!u) return "";
@@ -693,7 +703,8 @@ export default function Admin() {
 
                                         {form.image ? (
                                             <img
-                                                src={form.image}
+                                                src={normalizeUrl(form.image) || fallbackImg}
+                                                onError={imgFallback}
                                                 alt=""
                                                 style={{
                                                     width: "100%",
@@ -705,6 +716,7 @@ export default function Admin() {
                                                     border: "1px solid rgba(255,255,255,0.14)",
                                                 }}
                                             />
+
                                         ) : (
                                             <div style={{ opacity: 0.7 }}>No image yet.</div>
                                         )}
@@ -757,7 +769,8 @@ export default function Admin() {
                                                             }}
                                                         >
                                                             <img
-                                                                src={url}
+                                                                src={normalizeUrl(url) || fallbackImg}
+                                                                onError={imgFallback}
                                                                 alt=""
                                                                 style={{
                                                                     width: 120,
@@ -769,6 +782,7 @@ export default function Admin() {
                                                                         : "1px solid rgba(255,255,255,0.14)",
                                                                 }}
                                                             />
+
 
                                                             <button
                                                                 className="btn"
