@@ -6,7 +6,7 @@ export const localSiteContent = {
     hero: {
         image: `${base}hero/printer.jpg`,
         headline: "Cute sensory toys, made with love",
-        subhead: "3D-printed fidgets and fun stuff for busy hands.",
+        subhead: "3D-printed fidgets, for busy hands and loud brains.",
         ctaText: "Shop now",
         ctaTo: "/shop",
         secondaryText: "Custom request",

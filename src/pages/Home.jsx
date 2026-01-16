@@ -45,13 +45,7 @@ export default function Home() {
                 <img
                     src={`${base}logo-hero.png`}
                     alt={site.brandName}
-                    style={{
-                        width: "clamp(180px, 20vw, 280px)",
-                        height: "auto",
-                        display: "block",
-                        margin: 0,
-                        opacity: 0.95,
-                    }}
+                    className="hero-logo"
                 />
 
                 <h1 className="sr-only">{site.brandName}</h1>

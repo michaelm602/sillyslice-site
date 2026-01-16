@@ -591,6 +591,20 @@ body {
   will-change: background-position;
 }
 
+.hero-logo {
+  width: clamp(180px, 20vw, 280px);
+  height: auto;
+  display: block;
+
+  /* THIS is the magic */
+  filter:
+    
+    drop-shadow(0 8px 28px rgba(0,0,0,0.55))
+    drop-shadow(0 0 18px rgba(255,255,255,0.35));
+
+  opacity: 1;
+}
+
 /* =========================
    Featured section (Home)
    Use SAME cards as Shop (toy-card)
