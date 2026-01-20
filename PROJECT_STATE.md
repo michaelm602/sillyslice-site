@@ -167,37 +167,43 @@ Layout stays locked; content is the only editable layer
 Images live in Firebase Storage and are referenced in Firestore
 
 🚧 Next planned steps (priority order)
-1) Admin quality-of-life (high leverage)
+🧠 So What’s ACTUALLY Next (If/When You’re Ready)
 
-Add “Shop visibility” checklist per product (active/image/price/etc.)
+Not roadmap fluff—these are the only things left that actually matter:
 
-Add publish confirmation / guardrails (avoid accidental live changes)
+Option A — Customer flow (business-facing)
 
-Add “Create new product” + “Duplicate product” actions
+“Request Order” flow (no payment yet)
 
-Add optional “Discard draft” action
+Product → Contact prefill
 
-2) Product + inventory readiness
+EmailJS or Firestore-backed inquiries
 
-Add basic inventory fields validation (qty vs leadDays depending on fulfillment)
+Option B — Inventory polish (internal)
 
-Add optional “inactive” hiding behavior clearly in Admin
+Soft validation warnings (not blockers)
 
-3) Customer checkout path (staged approach)
+Visual cues:
 
-Add “Request Order” flow now (contact form prefilled from product)
+“Ready to ship: 0 left”
 
-Later: PayPal checkout integration (Stripe later if needed)
+“Made to order: 5–7 days”
 
-4) Performance polish
+Optional archive (not delete) for retired products
 
-Image compression workflow (webp/jpg sizing strategy)
+Option C — Performance + polish
 
-Preload hero image only (avoid overfetch)
+Image compression pipeline (admin-side)
 
-Optional: srcset later
+Hero image preload only
 
-5) Hosting / domain (future)
+Optional srcset later
+
+Option D — Sit back and don’t touch it
+
+Which, honestly?
+
+Is a valid power move right now 😌
 
 Custom domain (sillyslice.com)
 

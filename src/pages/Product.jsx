@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import SafeImage from "../components/SafeImage";
 import useProducts from "../hooks/useProducts";
 import Lightbox from "../components/Lightbox";
@@ -7,6 +7,8 @@ import Lightbox from "../components/Lightbox";
 export default function Product() {
     const { id } = useParams();
     const { products, loading } = useProducts();
+
+    const navigate = useNavigate();
 
     const product = useMemo(
         () => products.find((p) => String(p.id) === String(id)),
@@ -156,9 +158,36 @@ export default function Product() {
                             </p>
                         ) : null}
 
-                        <button className="btn btn-primary" disabled title="Checkout coming soon">
-                            Add to cart (coming soon)
+                        <button
+                            className="btn btn-primary"
+                            type="button"
+                            onClick={() => {
+                                const productUrl = `${window.location.origin}${import.meta.env.BASE_URL}#/shop/${id}`;
+
+                                navigate("/contact", {
+                                    state: {
+                                        from: "product",
+                                        product: {
+                                            id: product.id,
+                                            name: product.name,
+                                            slug: product.slug || "",
+                                            image: product.image || product.imageUrl || heroSrc,
+                                            fulfillment: product.fulfillment || "",
+                                            leadDays: product.leadDays ?? null,
+                                            qty: product.qty ?? null,
+                                            price: product.price ?? null,
+                                        },
+                                        request: {
+                                            quantity: 1,
+                                            productUrl,
+                                        },
+                                    },
+                                });
+                            }}
+                        >
+                            Request order
                         </button>
+
                     </div>
                 </div>
             </section>

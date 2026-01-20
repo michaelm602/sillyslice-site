@@ -11,25 +11,39 @@ import { useNavigate } from "react-router-dom";
 import { uploadProductImage } from "../utils/uploadImage";
 import { deleteStorageImage } from "../utils/deleteImage";
 import { getProductVisibility } from "../utils/productVisibility";
+import useInquiries from "../hooks/useInquiries";
+import { setInquiryStatus, setInquiryAdminNote } from "../utils/inquiryAdmin";
 
 const LS_KEY = "sillyslice_admin_ui";
 
 function loadUiState() {
     try {
         const raw = localStorage.getItem(LS_KEY);
-        return raw ? JSON.parse(raw) : null;
+        if (!raw) return null;
+
+        const parsed = JSON.parse(raw);
+
+        // Optional: schema/version guard
+        if (!parsed || typeof parsed !== "object") return null;
+        if (parsed.__v && parsed.__v !== 1) return null;
+
+        return parsed;
     } catch {
+        // If it’s corrupted, wipe it so we don’t keep re-hitting parse errors
+        try { localStorage.removeItem(LS_KEY); } catch { }
         return null;
     }
 }
 
+
 function saveUiState(next) {
     try {
-        localStorage.setItem(LS_KEY, JSON.stringify(next));
+        localStorage.setItem(LS_KEY, JSON.stringify({ __v: 1, ...next }));
     } catch {
         // ignore
     }
 }
+
 
 function toNumberOrNull(v) {
     if (v === "" || v === null || v === undefined) return null;
@@ -69,7 +83,7 @@ export default function Admin() {
 
     // --- UI state persistence (tab / selected product / view) ---
     const ui = loadUiState();
-    const [tab, setTab] = useState(ui?.tab || "site"); // "site" | "products"
+    const [tab, setTab] = useState(ui?.tab || "site"); // "site" | "products" | "inquiries"
     const [selectedId, setSelectedId] = useState(ui?.selectedId || "");
     const [view, setView] = useState(ui?.view || "draft"); // "draft" | "published"
 
@@ -94,6 +108,9 @@ export default function Admin() {
         duplicateProduct,
     } = useAdminProducts();
 
+    // Inquiries (admin inbox)
+    const { inquiries, loading: inquiriesLoading } = useInquiries();
+
     // If stored selectedId doesn’t exist anymore, clear it
     useEffect(() => {
         if (!selectedId) return;
@@ -105,6 +122,8 @@ export default function Admin() {
         () => products.find((p) => p.id === selectedId) || null,
         [products, selectedId]
     );
+
+
 
     const isDev = import.meta.env.DEV;
 
@@ -477,6 +496,17 @@ export default function Admin() {
                     </button>
 
                     <button
+                        className={`btn ${tab === "inquiries" ? "btn-primary" : ""}`}
+                        onClick={() => {
+                            setTab("inquiries");
+                            setSelectedId(""); // optional: keeps the product editor from staying “selected”
+                        }}
+                    >
+                        Inquiries
+                        {Array.isArray(inquiries) && inquiries.length ? ` (${inquiries.length})` : ""}
+                    </button>
+
+                    <button
                         className="btn"
                         onClick={async () => {
                             await signOut(auth);
@@ -535,6 +565,9 @@ export default function Admin() {
                         >
                             + New Product
                         </button>
+
+                        {/* ---------------- INQUIRIES TAB ---------------- */}
+
 
                         {/* ✅ DUPLICATE */}
                         <button
@@ -1026,6 +1059,189 @@ export default function Admin() {
                     </div>
                 </div>
             ) : null}
+
+            {tab === "inquiries" ? (
+                <InquiriesPanel
+                    inquiries={inquiries}
+                    loading={inquiriesLoading}
+                    onSetStatus={setInquiryStatus}
+                    onSaveNote={setInquiryAdminNote}
+                />
+            ) : null}
         </div>
     );
 }
+
+function fmtTime(ts) {
+    try {
+        const d = ts?.toDate?.() ? ts.toDate() : null;
+        return d ? d.toLocaleString() : "";
+    } catch {
+        return "";
+    }
+}
+
+function InquiriesPanel({ inquiries, loading, onSetStatus, onSaveNote }) {
+    const [filter, setFilter] = useState("all"); // all | new | in-progress | done
+    const [openId, setOpenId] = useState(null);
+    const [noteDraft, setNoteDraft] = useState({}); // { [id]: string }
+
+    const rows = useMemo(() => {
+        const list = Array.isArray(inquiries) ? inquiries : [];
+        if (filter === "all") return list;
+        return list.filter((x) => (x.status || "new") === filter);
+    }, [inquiries, filter]);
+
+    return (
+        <div style={{ display: "grid", gap: 12 }}>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+                <div style={{ fontWeight: 900, fontSize: 18 }}>Inbox</div>
+
+                <div style={{ marginLeft: "auto", display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {["all", "new", "in-progress", "done"].map((k) => (
+                        <button
+                            key={k}
+                            className={`btn ${filter === k ? "btn-primary" : ""}`}
+                            type="button"
+                            onClick={() => setFilter(k)}
+                        >
+                            {k === "all" ? "All" : k}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="card-soft" style={{ padding: 14 }}>
+                {loading ? (
+                    <div style={{ opacity: 0.8 }}>Loading inquiries…</div>
+                ) : rows.length === 0 ? (
+                    <div style={{ opacity: 0.8 }}>No inquiries yet.</div>
+                ) : (
+                    <div style={{ display: "grid", gap: 10 }}>
+                        {rows.map((x) => {
+                            const status = x.status || "new";
+
+                            const name = x.customer?.name || "(no name)";
+                            const email = x.customer?.email || "(no email)";
+                            const msg = x.message || "(no message)";
+                            const when = fmtTime(x.createdAt);
+
+                            const productName = x.product?.name || "General inquiry";
+                            const qty = x.request?.quantity ?? "";
+                            const productUrl = x.request?.productUrl || "";
+
+                            const isOpen = openId === x.id;
+                            const note = noteDraft[x.id] ?? x.adminNote ?? "";
+
+                            return (
+                                <div key={x.id} className="card-soft" style={{ padding: 14, display: "grid", gap: 10 }}>
+                                    <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                                        <div style={{ fontWeight: 950 }}>
+                                            {productName}{qty ? ` × ${qty}` : ""}
+                                        </div>
+
+                                        {/* PRODUCT IMAGE */}
+                                        {x.product?.image ? (
+                                            <img
+                                                src={x.product.image}
+                                                alt={x.product.name || "Product"}
+                                                style={{
+                                                    width: 64,
+                                                    height: 64,
+                                                    objectFit: "cover",
+                                                    borderRadius: 10,
+                                                    border: "1px solid rgba(255,255,255,0.15)",
+                                                    marginTop: 6,
+                                                }}
+                                            />
+                                        ) : null}
+
+
+                                        <span
+                                            className={`toy-badge ${status === "new" ? "ready" : status === "in-progress" ? "mto" : ""
+                                                }`}
+                                        >
+                                            {status}
+                                        </span>
+
+                                        <div style={{ marginLeft: "auto", fontSize: 12, opacity: 0.75 }}>
+                                            {when}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                                        <div style={{ fontWeight: 800 }}>{name}</div>
+
+                                        <a
+                                            href={`mailto:${email}?subject=Silly%20Slice%20Order%20Request&body=Hi%20${encodeURIComponent(
+                                                name
+                                            )},%0D%0A%0D%0AThanks%20for%20reaching%20out%20about%20"${encodeURIComponent(productName)}".%0D%0A%0D%0A`}
+                                            style={{ color: "var(--text)", textDecoration: "none", fontWeight: 800 }}
+                                            onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
+                                            onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+                                        >
+                                            {email}
+                                        </a>
+
+                                        <button
+                                            className="btn"
+                                            type="button"
+                                            style={{ marginLeft: "auto" }}
+                                            onClick={() => setOpenId(isOpen ? null : x.id)}
+                                        >
+                                            {isOpen ? "Hide" : "Open"}
+                                        </button>
+                                    </div>
+
+                                    {isOpen ? (
+                                        <>
+                                            {productUrl ? (
+                                                <div style={{ fontSize: 12, opacity: 0.8 }}>
+                                                    Product link:{" "}
+                                                    <a href={productUrl} target="_blank" rel="noreferrer" style={{ color: "var(--text)" }}>
+                                                        open
+                                                    </a>
+                                                </div>
+                                            ) : null}
+
+                                            <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.4 }}>
+                                                {msg}
+                                            </div>
+
+                                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                                                <button className="btn" type="button" onClick={() => onSetStatus(x.id, "new")}>
+                                                    Mark new
+                                                </button>
+                                                <button className="btn" type="button" onClick={() => onSetStatus(x.id, "in-progress")}>
+                                                    In progress
+                                                </button>
+                                                <button className="btn btn-primary" type="button" onClick={() => onSetStatus(x.id, "done")}>
+                                                    Done
+                                                </button>
+                                            </div>
+
+                                            <div style={{ display: "grid", gap: 6 }}>
+                                                <label style={{ fontWeight: 900 }}>Admin note</label>
+                                                <textarea
+                                                    className="shop-select"
+                                                    rows={4}
+                                                    value={note}
+                                                    onChange={(e) => setNoteDraft((s) => ({ ...s, [x.id]: e.target.value }))}
+                                                    placeholder="Colors, follow-up notes, pricing, etc."
+                                                />
+                                                <button className="btn" type="button" onClick={() => onSaveNote(x.id, note)}>
+                                                    Save note
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : null}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
