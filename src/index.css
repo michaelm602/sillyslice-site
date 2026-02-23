@@ -332,6 +332,26 @@ body {
   color: var(--text);
 }
 
+/* --- Shared form inputs + textareas --- */
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--panel) 55%, transparent);
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.input:focus {
+  border-color: color-mix(in srgb, var(--accent2) 55%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent2) 18%, transparent);
+}
+
 /* --- Shop filter select (dark + light safe) --- */
 .shop-select {
   padding: 10px 14px;

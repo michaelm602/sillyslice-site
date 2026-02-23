@@ -34,7 +34,8 @@ export default function Login() {
                 <label className="shop-label">
                     Email
                     <input
-                        style={{ width: "100%", marginTop: 6 }}
+                        className="input"
+                        style={{ marginTop: 6 }}
                         type="email"
                         autoComplete="email"
                         value={email}
@@ -46,7 +47,8 @@ export default function Login() {
                 <label className="shop-label">
                     Password
                     <input
-                        style={{ width: "100%", marginTop: 6 }}
+                        className="input"
+                        style={{ marginTop: 6 }}
                         type="password"
                         autoComplete="current-password"
                         value={password}
