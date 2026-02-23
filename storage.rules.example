@@ -1,0 +1,54 @@
+// ============================================================
+// storage.rules.example
+//
+// NOT DEPLOYED. Review carefully, then rename to storage.rules
+// and deploy with: firebase deploy --only storage
+//
+// Schema assumptions:
+//   products/{productId}/main-*       — product hero images
+//   products/{productId}/gallery/*    — product gallery images
+//
+// Policy:
+//   - Public read on all product images
+//   - Only authenticated admins can upload or delete
+//   - File size capped at 8 MB per upload
+//   - Only image/* content types accepted
+// ============================================================
+
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ----------------------------------------------------------------
+    // Helper: admin check (mirrors Firestore rule)
+    // ----------------------------------------------------------------
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    // ----------------------------------------------------------------
+    // Product images — public read, admin write only
+    // ----------------------------------------------------------------
+    match /products/{productId}/{allPaths=**} {
+      // Anyone can fetch product images (needed for <img> src)
+      allow read: if true;
+
+      // Only admins can upload
+      allow create,
+            update: if isAdmin() &&
+                       request.resource.size <= 8 * 1024 * 1024 &&
+                       request.resource.contentType.matches('image/.*');
+
+      // Only admins can delete
+      allow delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------------------
+    // Deny everything else
+    // ----------------------------------------------------------------
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

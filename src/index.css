@@ -593,6 +593,7 @@ body {
 
 .hero-logo {
   width: clamp(180px, 20vw, 280px);
+  aspect-ratio: 2439 / 1156;
   height: auto;
   display: block;
 
@@ -657,7 +658,7 @@ body {
 
 .featured-imgWrap {
   position: relative;
-  height: 150px; /* match toy-imgWrap */
+  height: 220px;
   background:
     radial-gradient(120px 90px at 20% 20%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%),
     radial-gradient(120px 90px at 80% 30%, color-mix(in srgb, var(--accent2) 10%, transparent), transparent 60%),
@@ -787,7 +788,7 @@ body {
 
 .toy-imgWrap {
   position: relative;
-  height: 150px;
+  height: 220px;
   background:
     radial-gradient(120px 90px at 20% 20%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%),
     radial-gradient(120px 90px at 80% 30%, color-mix(in srgb, var(--accent2) 10%, transparent), transparent 60%),
@@ -1111,6 +1112,20 @@ html, body {
   background: rgba(0,0,0,0.45);
   border: 1px solid rgba(255,255,255,0.18);
   backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 160ms ease;
+  pointer-events: none;
+}
+
+.product-heroBtn:hover .product-zoomTag {
+  opacity: 1;
+}
+
+/* Always show on touch devices — no hover available */
+@media (hover: none) {
+  .product-zoomTag {
+    opacity: 1;
+  }
 }
 
 /* ===== Product hero image (NO CROP) ===== */
@@ -1321,20 +1336,6 @@ z-index: 100000; /* belt + suspenders */
   /* Keep blur, but DON'T animate it */
   backdrop-filter: blur(14px);
 
-  /* Example: whatever class uses blur */
-.navbar, .drawer, .glass {
-  background: rgba(10, 14, 24, 0.78);
-}
-
-/* Only apply blur if supported */
-@supports ((-webkit-backdrop-filter: blur(10px)) or (backdrop-filter: blur(10px))) {
-  .glass, .navbar, .drawer {
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-  }
-}
-
-
   /* GPU-friendly slide */
   transform: translate3d(110%, 0, 0);
   transition: transform 240ms ease;
@@ -1349,6 +1350,8 @@ z-index: 100000; /* belt + suspenders */
   grid-template-rows: auto auto 1fr auto;
   gap: 12px;
   padding: 14px;
+
+  touch-action: pan-y; /* allow vertical scroll, we'll handle horizontal */
 
   /* prevents weird flicker on some browsers */
   backface-visibility: hidden;
@@ -1392,16 +1395,10 @@ z-index: 100000; /* belt + suspenders */
   padding: 8px 10px;
   cursor: pointer;
 }
-/* ---- Drawer: stop the link cards from stretching ---- */
-.drawer-link {
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
-}
-
 /* --- Fix giant CTA in drawer --- */
 .drawer-cta {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   align-content: start;        /* don't stretch vertically */
   grid-auto-rows: max-content; /* rows fit content */
 }
@@ -1440,12 +1437,6 @@ z-index: 100000; /* belt + suspenders */
   cursor: grabbing;
 }
 
-/* Helps mobile browsers keep drag smooth */
-.drawer {
-  touch-action: pan-y; /* allow vertical scroll, we’ll handle horizontal */
-}
-
-
 /* Smaller drawer nav items */
 @media (max-width: 640px) {
   .drawer {
@@ -1466,17 +1457,11 @@ z-index: 100000; /* belt + suspenders */
   }
 
   .drawer .drawer-cta .btn,
-.drawer .drawer-cta .btn-primary {
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  .drawer .drawer-cta .btn-primary {
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  }
 }
-}
-
-/* Optional: remove inline style needs */
-.drawer-cta a {
-  text-decoration: none;
-}
-
 
 .drawer-links {
   display: grid;
@@ -1495,11 +1480,6 @@ z-index: 100000; /* belt + suspenders */
 
 .drawer-link:hover {
   border-color: color-mix(in srgb, var(--accent2) 35%, var(--border));
-}
-
-.drawer-cta {
-  display: grid;
-  gap: 10px;
 }
 
 /* Mobile behavior: show hamburger + hide desktop nav */

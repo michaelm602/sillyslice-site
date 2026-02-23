@@ -26,7 +26,7 @@ function deepMerge(base, override) {
     return override ?? base;
 }
 
-function normalizeProduct(raw, fallbackId = "") {
+export function normalizeProduct(raw, fallbackId = "") {
     const safe = deepMerge(PRODUCT_DEFAULTS, raw || {});
     safe.id = safe.id || fallbackId;
 

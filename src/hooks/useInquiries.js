@@ -6,6 +6,7 @@ import { db } from "../firebase";
 export default function useInquiries() {
     const [inquiries, setInquiries] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const ref = collection(db, "inquiries");
@@ -20,6 +21,7 @@ export default function useInquiries() {
             },
             (err) => {
                 console.error("useInquiries:", err);
+                setError(err);
                 setLoading(false);
             }
         );
@@ -27,5 +29,5 @@ export default function useInquiries() {
         return () => unsub();
     }, []);
 
-    return { inquiries, loading };
+    return { inquiries, loading, error };
 }

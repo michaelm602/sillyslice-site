@@ -109,7 +109,7 @@ export default function Admin() {
     } = useAdminProducts();
 
     // Inquiries (admin inbox)
-    const { inquiries, loading: inquiriesLoading } = useInquiries();
+    const { inquiries, loading: inquiriesLoading, error: inquiriesError } = useInquiries();
 
     // If stored selectedId doesn’t exist anymore, clear it
     useEffect(() => {
@@ -1064,6 +1064,7 @@ export default function Admin() {
                 <InquiriesPanel
                     inquiries={inquiries}
                     loading={inquiriesLoading}
+                    error={inquiriesError}
                     onSetStatus={setInquiryStatus}
                     onSaveNote={setInquiryAdminNote}
                 />
@@ -1081,7 +1082,7 @@ function fmtTime(ts) {
     }
 }
 
-function InquiriesPanel({ inquiries, loading, onSetStatus, onSaveNote }) {
+function InquiriesPanel({ inquiries, loading, error, onSetStatus, onSaveNote }) {
     const [filter, setFilter] = useState("all"); // all | new | in-progress | done
     const [openId, setOpenId] = useState(null);
     const [noteDraft, setNoteDraft] = useState({}); // { [id]: string }
@@ -1094,6 +1095,11 @@ function InquiriesPanel({ inquiries, loading, onSetStatus, onSaveNote }) {
 
     return (
         <div style={{ display: "grid", gap: 12 }}>
+            {error ? (
+                <div style={{ padding: "10px 14px", background: "rgba(255,80,80,0.12)", border: "1px solid rgba(255,80,80,0.35)", borderRadius: 8, color: "salmon", fontSize: 13 }}>
+                    Could not load inquiries: {error.message || String(error)}
+                </div>
+            ) : null}
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
                 <div style={{ fontWeight: 900, fontSize: 18 }}>Inbox</div>
 

@@ -273,7 +273,7 @@ export default function Navbar() {
 
                     <div className="drawer-cta">
                         <NavLink to="/contact" onClick={close} className="btn">
-                            Custom request
+                            Request custom colors
                         </NavLink>
                     </div>
                 </aside>

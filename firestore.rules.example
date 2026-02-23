@@ -1,0 +1,104 @@
+// ============================================================
+// firestore.rules.example
+//
+// NOT DEPLOYED. Review carefully, then rename to firestore.rules
+// and deploy with: firebase deploy --only firestore:rules
+//
+// Schema assumptions:
+//   products    — admin write, public read
+//   siteContent — admin write, public read
+//   inquiries   — public create-only, admin read/write
+// ============================================================
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------
+    // Helper: is the requesting user an authorised admin?
+    // Uses a custom claim set via Firebase Admin SDK / cloud function.
+    // Until you set up custom claims, you can temporarily use the
+    // email check below — but custom claims are the correct long-term fix.
+    // ----------------------------------------------------------------
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    // Temporary fallback (remove once custom claims are wired up):
+    // function isAdmin() {
+    //   return request.auth != null &&
+    //     request.auth.token.email in [
+    //       'michaelm602@yahoo.com',
+    //       'sillyslice7@gmail.com'
+    //     ];
+    // }
+
+    // ----------------------------------------------------------------
+    // products — public read, admin write only
+    // ----------------------------------------------------------------
+    match /products/{productId} {
+      allow read:   if true;
+      allow create,
+            update,
+            delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------------------
+    // siteContent — public read, admin write only
+    // ----------------------------------------------------------------
+    match /siteContent/{docId} {
+      allow read:   if true;
+      allow create,
+            update,
+            delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------------------
+    // inquiries — anyone can create (contact form), nobody can read
+    // or modify without being an admin.
+    //
+    // Incoming create validation:
+    //   - customer.name  must be a non-empty string  (≤ 200 chars)
+    //   - customer.email must contain "@"             (≤ 200 chars)
+    //   - message        must be a non-empty string  (≤ 2000 chars)
+    //   - status must be "new" (prevents client setting status: "done")
+    //   - source must be "sillyslice-site"
+    // ----------------------------------------------------------------
+    match /inquiries/{inquiryId} {
+      allow create: if
+        // required top-level fields present
+        request.resource.data.keys().hasAll(['customer', 'message', 'status', 'source', 'createdAt']) &&
+
+        // customer sub-map
+        request.resource.data.customer is map &&
+        request.resource.data.customer.name  is string &&
+        request.resource.data.customer.name.size()  > 0 &&
+        request.resource.data.customer.name.size()  <= 200 &&
+        request.resource.data.customer.email is string &&
+        request.resource.data.customer.email.matches('.*@.*') &&
+        request.resource.data.customer.email.size() <= 200 &&
+
+        // message
+        request.resource.data.message is string &&
+        request.resource.data.message.size() > 0 &&
+        request.resource.data.message.size() <= 2000 &&
+
+        // locked fields — clients cannot override these
+        request.resource.data.status == 'new' &&
+        request.resource.data.source == 'sillyslice-site';
+
+      // only admins can read, update (change status/notes), or delete
+      allow read,
+            update,
+            delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------------------
+    // Deny everything else by default
+    // ----------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

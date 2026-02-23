@@ -1,6 +1,6 @@
 Silly Slice — Project State (Updated)
-🔗 Quick links
 
+🔗 Quick links
 Repo: https://github.com/michaelm602/sillyslice-site
 
 Live (GitHub Pages): https://michaelm602.github.io/sillyslice-site/#/
@@ -12,29 +12,19 @@ Build a cute + playful multi-page storefront (React + Vite) with a polished, mob
 🧭 Pages
 
 Home ✅
-
 Shop ✅
-
 About ✅
-
 Contact ✅
-
 Product Detail (/shop/:id) ✅
-
 Admin (/admin, auth-protected) ✅ (working + responsive)
-
 Login (/login) ✅
 
 🧱 Tech stack
 
 Vite + React
-
 React Router (HashRouter) — GitHub Pages safe
-
 CSS variables theme (dark + light via prefers-color-scheme)
-
 Styling centralized in src/index.css
-
 Firebase
 
 Firestore ✅
@@ -42,16 +32,13 @@ Firestore ✅
 Auth ✅
 
 Storage ✅
-
 gh-pages deploy (build → dist → deploy)
 
 ✅ What works right now
 Deployment + routing
 
 Stable GitHub Pages deployment ✅
-
 Routing works with hash routes ✅
-
 Mobile responsive across pages ✅
 
 Shop + product experience
@@ -66,9 +53,9 @@ Thumbnail gallery ✅
 
 Stock/price/badges ✅
 
-Custom Lightbox ✅
+“Request order” button ✅ (routes to Contact / inquiry flow)
 
-Custom Lightbox (no library)
+Custom Lightbox ✅
 
 Fixed viewport overlay ✅
 
@@ -90,11 +77,12 @@ Prevents flicker ✅
 
 Lazy loading + async decoding ✅
 
-Admin system (real, not fake)
+✅ Admin system (real, not fake)
 
 Admin page exists and is responsive ✅
-
 Secure login flow ✅
+
+Products admin
 
 Can upload main image ✅
 
@@ -110,7 +98,37 @@ Can edit draft product fields ✅
 
 Can publish draft ✅
 
-Firebase security / access
+Shop visibility checklist ✅ (guardrails in place)
+
+📨 Admin Inbox (NEW)
+
+Admin now includes an Inquiries tab (inbox view) ✅
+
+Inquiries stored in Firestore collection: inquiries ✅
+
+Admin can view inquiries + details ✅
+
+Status workflow supported ✅
+
+new → in_progress → done (plus optional spam) ✅
+
+Admin note field supported ✅ (saved back to Firestore)
+
+Product thumbnail preview shown in inbox ✅ (visual context for Audrey)
+
+Inquiry payload (snapshot model)
+
+Inquiry stores a product snapshot, not just productId ✅
+
+Includes id, name, image, fulfillment fields, qty, and price ✅
+
+Slug is NOT used anywhere (ID-based routing: /shop/:id) ✅
+
+Product image fallback to placeholder if missing ✅
+
+(Planned/optional) snapshotAt: serverTimestamp() — discussed as upgrade
+
+🔐 Firebase security / access
 
 Firebase Auth has two admin users:
 
@@ -118,95 +136,74 @@ michaelm602@yahoo.com
 
 sillyslice7@gmail.com
 
-Authorized domains updated ✅:
+Authorized domains updated ✅
 
 Includes michaelm602.github.io (GH Pages OAuth-safe)
 
 Storage rules locked to admin emails ✅
-
 Firestore rules locked to admin emails ✅
-
-Public read for products + siteContent
-
-Admin-only write
-
-Static asset / placeholder fix
-
-Fixed 404 spam for missing placeholder images by ensuring proper public path handling ✅
+Public read for products + siteContent ✅
+Admin-only write ✅
+(Inquiries: customer create allowed; admin-only read/update/delete) ✅ (in place / aligned with inbox approach)
 
 🔧 Recent fixes & improvements
 
 ✅ Fixed lightbox centering bug (grid/transform interaction)
-
 ✅ Fixed lightbox image oversizing
-
 ✅ Locked lightbox layout to a single grid cell
-
 ✅ Prevented background scroll while lightbox is open
-
 ✅ Removed image cropping across product cards + hero
-
 ✅ Reduced mobile flicker and animation jitter
-
 ✅ Fixed z-index conflicts (navbar vs overlays)
-
 ✅ Added image deletion (Storage + Firestore updates)
-
 ✅ Admin page made responsive
-
 ✅ Firebase Auth authorized domain added for GH Pages
+✅ Added inquiries inbox in Admin
+✅ Added inquiry product image thumbnail in inbox
+✅ Inquiry stores product snapshot (no slug)
 
 🧠 Current approach
 
 Products stored in Firestore with draft → publish workflow
-
 Shop displays “published-ish” items (active + image)
-
 Layout stays locked; content is the only editable layer
-
 Images live in Firebase Storage and are referenced in Firestore
+Inquiries are Firestore docs (inquiries) and displayed in Admin inbox
 
 🚧 Next planned steps (priority order)
-🧠 So What’s ACTUALLY Next (If/When You’re Ready)
-
-Not roadmap fluff—these are the only things left that actually matter:
-
 Option A — Customer flow (business-facing)
 
-“Request Order” flow (no payment yet)
+Contact page: turn into a real inquiry form (name/email/message/qty) ✅/⏳ (depends what’s already wired)
 
-Product → Contact prefill
+Optional: EmailJS notification on new inquiry (email Audrey automatically) ⏳
 
-EmailJS or Firestore-backed inquiries
+Optional: auto-confirmation email to customer ⏳
 
-Option B — Inventory polish (internal)
+Option B — Inbox polish (internal)
+
+Filters: New / In progress / Done / Spam ⏳
+
+“Archive” (soft delete) for inquiries instead of hard delete ✅ (recommended)
+
+Optional: hard delete behind “type DELETE” confirm (admin-only) ⏳
+
+Option C — Inventory polish (internal)
 
 Soft validation warnings (not blockers)
-
 Visual cues:
 
 “Ready to ship: 0 left”
 
 “Made to order: 5–7 days”
-
 Optional archive (not delete) for retired products
 
-Option C — Performance + polish
+Option D — Performance + polish
 
 Image compression pipeline (admin-side)
-
 Hero image preload only
-
 Optional srcset later
 
-Option D — Sit back and don’t touch it
-
-Which, honestly?
-
-Is a valid power move right now 😌
-
 Custom domain (sillyslice.com)
-
 Add authorized domains:
 
 sillyslice.com
@@ -218,9 +215,7 @@ Optional move off GH Pages later
 🧨 Non-goals (for now)
 
 No design overhaul
-
 No animation-heavy gimmicks
-
 No external UI libraries for core features (lightbox, cards, nav)
 
-If you want my vote on what we hit next: “Create new product + Shop visibility checklist” — because that’s the moment Audrey stops needing you to babysit the catalog and can run the store like it’s a real storefront, not a science project.
+If you want, tomorrow we can do the next real move: turn Contact into a legit form + optionally EmailJS notify Audrey, then add Archive in the inbox so nothing gets deleted by accident.

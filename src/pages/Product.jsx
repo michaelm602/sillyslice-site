@@ -1,19 +1,14 @@
 import { useMemo, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import SafeImage from "../components/SafeImage";
-import useProducts from "../hooks/useProducts";
+import useProduct from "../hooks/useProduct";
 import Lightbox from "../components/Lightbox";
 
 export default function Product() {
     const { id } = useParams();
-    const { products, loading } = useProducts();
+    const { product, loading } = useProduct(id);
 
     const navigate = useNavigate();
-
-    const product = useMemo(
-        () => products.find((p) => String(p.id) === String(id)),
-        [products, id]
-    );
 
     const fallbackImg = `${import.meta.env.BASE_URL}products/placeholder1.png`;
 
@@ -158,6 +153,11 @@ export default function Product() {
                             </p>
                         ) : null}
 
+                        <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>
+                            Every toy is made to order. Fill out the short form and we'll confirm
+                            availability and send a payment link within 48 hours.
+                        </p>
+
                         <button
                             className="btn btn-primary"
                             type="button"
@@ -185,7 +185,7 @@ export default function Product() {
                                 });
                             }}
                         >
-                            Request order
+                            Order this toy
                         </button>
 
                     </div>

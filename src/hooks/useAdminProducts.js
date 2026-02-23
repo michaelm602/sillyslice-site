@@ -48,7 +48,7 @@ export default function useAdminProducts() {
                 if (!alive) return;
                 setItems([]);
                 setLoading(false);
-                console.error("[Silly Slice] Failed to load products:", e);
+                if (import.meta.env.DEV) console.error("[Silly Slice] Failed to load products:", e);
             }
         })();
 

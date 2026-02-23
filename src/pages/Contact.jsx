@@ -63,7 +63,7 @@ export default function Contact() {
         try {
             const p = prefill.product;
 
-            const inquiryId = await createInquiry({
+            await createInquiry({
                 customer: {
                     name: name.trim(),
                     email: email.trim(),
@@ -103,9 +103,7 @@ export default function Contact() {
             // optional: clear form but keep product info visible
             // setName(""); setEmail(""); setMessage(""); setQuantity(1);
 
-            // If you want to show the ID somewhere:
             // console.log("Inquiry created:", inquiryId);
-            void inquiryId;
         } catch (err) {
             console.error(err);
             setStatus("error");
@@ -114,7 +112,7 @@ export default function Contact() {
     }
 
     return (
-        <div style={{ display: "grid", gap: 12, maxWidth: 720 }}>
+        <div style={{ display: "grid", gap: 12, maxWidth: 720, margin: "0 auto", width: "100%" }}>
             <h1 style={{ margin: 0 }}>Contact</h1>
 
             <p style={{ color: "var(--muted)", margin: 0 }}>
@@ -167,9 +165,11 @@ export default function Contact() {
             {/* Form */}
             <form className="card" style={{ padding: 18, display: "grid", gap: 12 }} onSubmit={onSubmit}>
                 <div style={{ display: "grid", gap: 6 }}>
-                    <label style={{ fontWeight: 900 }}>Name</label>
+                    <label htmlFor="contact-name" style={{ fontWeight: 900 }}>Name</label>
                     <input
+                        id="contact-name"
                         className="input"
+                        type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Your name"
@@ -178,9 +178,11 @@ export default function Contact() {
                 </div>
 
                 <div style={{ display: "grid", gap: 6 }}>
-                    <label style={{ fontWeight: 900 }}>Email</label>
+                    <label htmlFor="contact-email" style={{ fontWeight: 900 }}>Email</label>
                     <input
+                        id="contact-email"
                         className="input"
+                        type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="you@example.com"
@@ -189,8 +191,9 @@ export default function Contact() {
                 </div>
 
                 <div style={{ display: "grid", gap: 6 }}>
-                    <label style={{ fontWeight: 900 }}>Quantity</label>
+                    <label htmlFor="contact-qty" style={{ fontWeight: 900 }}>Quantity</label>
                     <input
+                        id="contact-qty"
                         className="input"
                         type="number"
                         min="1"
@@ -200,8 +203,9 @@ export default function Contact() {
                 </div>
 
                 <div style={{ display: "grid", gap: 6 }}>
-                    <label style={{ fontWeight: 900 }}>Message</label>
+                    <label htmlFor="contact-message" style={{ fontWeight: 900 }}>Message</label>
                     <textarea
+                        id="contact-message"
                         className="input"
                         style={{ minHeight: 150, resize: "vertical" }}
                         value={message}
@@ -235,7 +239,7 @@ export default function Contact() {
                 </div>
 
                 <div style={{ color: "var(--muted2)", fontSize: 13 }}>
-                    Typical response time: <strong>24–48h-ish</strong>
+                    Typical response time: <strong>within 48 hours</strong>
                 </div>
             </form>
         </div>
